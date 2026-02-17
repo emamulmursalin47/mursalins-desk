@@ -26,6 +26,7 @@ interface ChatContextValue {
   messages: ChatMessage[];
   sendMessage: (content: string) => void;
   sendVisitorInfo: (name: string, email: string) => void;
+  requestHuman: () => void;
   isConnected: boolean;
   isTyping: boolean;
   typingSender: string | null;
@@ -190,6 +191,10 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     socket.emit("chat:visitor_info", { sessionId, name, email });
   }, []);
 
+  const requestHuman = useCallback(() => {
+    sendMessage("I'd like to talk to a human please");
+  }, [sendMessage]);
+
   return (
     <ChatContext.Provider
       value={{
@@ -200,6 +205,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
         messages,
         sendMessage,
         sendVisitorInfo,
+        requestHuman,
         isConnected,
         isTyping,
         typingSender,
