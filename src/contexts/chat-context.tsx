@@ -10,7 +10,10 @@ import {
   type ReactNode,
 } from "react";
 import { getSocket, disconnectSocket } from "@/lib/socket";
-import { playNotificationSound } from "@/lib/notification-sound";
+import {
+  playNotificationSound,
+  primeAudio,
+} from "@/lib/notification-sound";
 
 export interface ChatMessage {
   id: string;
@@ -69,6 +72,19 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     isOpenRef.current = isOpen;
     if (isOpen) setHasUnread(false);
   }, [isOpen]);
+
+  // Prime audio on first user interaction so notification sounds work
+  useEffect(() => {
+    const unlock = () => primeAudio();
+    document.addEventListener("click", unlock, { once: true });
+    document.addEventListener("touchstart", unlock, { once: true });
+    document.addEventListener("scroll", unlock, { once: true });
+    return () => {
+      document.removeEventListener("click", unlock);
+      document.removeEventListener("touchstart", unlock);
+      document.removeEventListener("scroll", unlock);
+    };
+  }, []);
 
   // Connect socket eagerly on mount
   useEffect(() => {
