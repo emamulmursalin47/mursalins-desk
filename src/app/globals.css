@@ -985,6 +985,15 @@ body {
   border-bottom: none;
 }
 
+/* ── Legal prose — justified body text for legal pages ── */
+.legal-prose {
+  text-align: justify;
+  text-justify: inter-word;
+}
+.legal-prose h1, .legal-prose h2, .legal-prose h3, .legal-prose h4 {
+  text-align: left;
+}
+
 /* ── Scrollbar Hide Utility ── */
 .scrollbar-hide {
   -ms-overflow-style: none;
