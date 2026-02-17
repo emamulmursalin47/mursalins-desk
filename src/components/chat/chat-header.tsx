@@ -3,7 +3,7 @@
 import { useChat } from "@/contexts/chat-context";
 
 export function ChatHeader() {
-  const { closeChat, requestHuman, mode, isConnected } = useChat();
+  const { closeChat, requestHuman, resetChat, mode, isConnected } = useChat();
 
   return (
     <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
@@ -47,7 +47,7 @@ export function ChatHeader() {
         </div>
       </div>
 
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-1">
         {mode === "AI" && (
           <button
             onClick={requestHuman}
@@ -65,6 +65,23 @@ export function ChatHeader() {
             Talk to Human
           </button>
         )}
+        {/* New Chat — reset session */}
+        <button
+          onClick={resetChat}
+          className="flex h-7 w-7 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-white/10 hover:text-foreground"
+          aria-label="New conversation"
+          title="New conversation"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 16 16"
+            fill="currentColor"
+            className="h-3.5 w-3.5"
+          >
+            <path d="M3.75 2a.75.75 0 0 0-.75.75v10.5a.75.75 0 0 0 1.085.67L8 11.69l3.915 2.23A.75.75 0 0 0 13 13.25V2.75a.75.75 0 0 0-.75-.75h-8.5ZM8 1.75a.75.75 0 0 1 .75.75v2.25H11a.75.75 0 0 1 0 1.5H8.75V8.5a.75.75 0 0 1-1.5 0V6.25H5a.75.75 0 0 1 0-1.5h2.25V2.5A.75.75 0 0 1 8 1.75Z" />
+          </svg>
+        </button>
+        {/* Close panel */}
         <button
           onClick={closeChat}
           className="flex h-7 w-7 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-white/10 hover:text-foreground"

@@ -23,6 +23,7 @@ interface ChatContextValue {
   toggleChat: () => void;
   openChat: () => void;
   closeChat: () => void;
+  resetChat: () => void;
   messages: ChatMessage[];
   sendMessage: (content: string) => void;
   sendVisitorInfo: (name: string, email: string) => void;
@@ -36,16 +37,6 @@ interface ChatContextValue {
 
 const ChatContext = createContext<ChatContextValue | undefined>(undefined);
 
-function getSessionId(): string {
-  if (typeof window === "undefined") return "";
-  let id = localStorage.getItem("chat_session_id");
-  if (!id) {
-    id = crypto.randomUUID();
-    localStorage.setItem("chat_session_id", id);
-  }
-  return id;
-}
-
 export function ChatProvider({ children }: { children: ReactNode }) {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -57,22 +48,26 @@ export function ChatProvider({ children }: { children: ReactNode }) {
   const hasStarted = useRef(false);
   const isOpenRef = useRef(isOpen);
 
+  // Fresh session ID per page load — no localStorage persistence
+  const sessionIdRef = useRef(
+    typeof window !== "undefined" ? crypto.randomUUID() : "",
+  );
+
   // Keep ref in sync
   useEffect(() => {
     isOpenRef.current = isOpen;
     if (isOpen) setHasUnread(false);
   }, [isOpen]);
 
-  // Connect socket eagerly on mount — connection is ready before user opens chat
+  // Connect socket eagerly on mount
   useEffect(() => {
     const socket = getSocket();
-    const sessionId = getSessionId();
 
     socket.on("connect", () => {
       setIsConnected(true);
       // On reconnect, rejoin room if chat was already started
       if (hasStarted.current) {
-        socket.emit("chat:start", { sessionId });
+        socket.emit("chat:start", { sessionId: sessionIdRef.current });
       }
     });
 
@@ -94,12 +89,10 @@ export function ChatProvider({ children }: { children: ReactNode }) {
 
     socket.on("chat:message", (msg: ChatMessage) => {
       setMessages((prev) => {
-        // Avoid duplicates
         if (prev.some((m) => m.id === msg.id)) return prev;
         return [...prev, msg];
       });
 
-      // If panel is closed and it's not from the visitor, mark unread
       if (!isOpenRef.current && msg.sender !== "VISITOR") {
         setHasUnread(true);
       }
@@ -117,7 +110,6 @@ export function ChatProvider({ children }: { children: ReactNode }) {
       "chat:mode_changed",
       (data: { mode: "AI" | "LIVE"; message: string }) => {
         setMode(data.mode);
-        // Add system message
         setMessages((prev) => [
           ...prev,
           {
@@ -146,7 +138,6 @@ export function ChatProvider({ children }: { children: ReactNode }) {
       console.warn("Chat error:", data.message);
     });
 
-    // Connect immediately — the socket is ready by the time user opens chat
     socket.connect();
 
     return () => {
@@ -155,16 +146,14 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
-  // Start chat session (emit chat:start) — only on first open
+  // Start chat session — only on first open
   const startChat = useCallback(() => {
     if (hasStarted.current) return;
     hasStarted.current = true;
     const socket = getSocket();
-    const sessionId = getSessionId();
     if (socket.connected) {
-      socket.emit("chat:start", { sessionId });
+      socket.emit("chat:start", { sessionId: sessionIdRef.current });
     }
-    // If not connected yet, the "connect" handler above will emit chat:start
   }, []);
 
   const openChat = useCallback(() => {
@@ -175,6 +164,23 @@ export function ChatProvider({ children }: { children: ReactNode }) {
 
   const closeChat = useCallback(() => {
     setIsOpen(false);
+  }, []);
+
+  // Reset: new session, clear messages, re-greet
+  const resetChat = useCallback(() => {
+    sessionIdRef.current = crypto.randomUUID();
+    hasStarted.current = false;
+    setMessages([]);
+    setMode("AI");
+    setIsTyping(false);
+    setTypingSender(null);
+
+    // Start a fresh conversation immediately
+    hasStarted.current = true;
+    const socket = getSocket();
+    if (socket.connected) {
+      socket.emit("chat:start", { sessionId: sessionIdRef.current });
+    }
   }, []);
 
   const toggleChat = useCallback(() => {
@@ -188,14 +194,19 @@ export function ChatProvider({ children }: { children: ReactNode }) {
   const sendMessage = useCallback((content: string) => {
     if (!content.trim()) return;
     const socket = getSocket();
-    const sessionId = getSessionId();
-    socket.emit("chat:message", { sessionId, content: content.trim() });
+    socket.emit("chat:message", {
+      sessionId: sessionIdRef.current,
+      content: content.trim(),
+    });
   }, []);
 
   const sendVisitorInfo = useCallback((name: string, email: string) => {
     const socket = getSocket();
-    const sessionId = getSessionId();
-    socket.emit("chat:visitor_info", { sessionId, name, email });
+    socket.emit("chat:visitor_info", {
+      sessionId: sessionIdRef.current,
+      name,
+      email,
+    });
   }, []);
 
   const requestHuman = useCallback(() => {
@@ -209,6 +220,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
         toggleChat,
         openChat,
         closeChat,
+        resetChat,
         messages,
         sendMessage,
         sendVisitorInfo,
