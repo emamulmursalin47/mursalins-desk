@@ -23,11 +23,13 @@ export function ChatPanel() {
   return (
     <div
       ref={panelRef}
-      className="fixed bottom-24 right-6 z-50 flex h-[480px] w-[380px] flex-col overflow-hidden rounded-2xl glass-heavy glass-shine max-sm:bottom-20 max-sm:right-4 max-sm:w-[calc(100vw-2rem)]"
+      className="fixed bottom-24 right-6 z-50 h-120 w-95 max-sm:bottom-20 max-sm:right-4 max-sm:w-[calc(100vw-2rem)]"
     >
-      <ChatHeader />
-      <ChatMessages />
-      <ChatInput />
+      <div className="flex h-full w-full flex-col overflow-hidden rounded-2xl glass-heavy glass-shine">
+        <ChatHeader />
+        <ChatMessages />
+        <ChatInput />
+      </div>
     </div>
   );
 }

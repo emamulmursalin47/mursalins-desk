@@ -14,7 +14,7 @@ export function ChatWidget() {
       {/* Floating Action Button */}
       <button
         onClick={toggleChat}
-        className="fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full btn-glass-primary text-white shadow-lg transition-transform duration-200 hover:scale-105 active:scale-95"
+        className="fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-[oklch(0.25_0.008_250/0.9)] border border-white/10 text-white shadow-[0_4px_24px_-4px_oklch(0.20_0.006_250/0.35)] backdrop-blur-md transition-transform duration-200 hover:scale-110 active:scale-95"
         aria-label={isOpen ? "Close chat" : "Open chat"}
       >
         {isOpen ? (
