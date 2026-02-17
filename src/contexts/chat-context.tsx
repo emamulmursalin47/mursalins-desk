@@ -95,6 +95,19 @@ export function ChatProvider({ children }: { children: ReactNode }) {
       }) => {
         setMode(data.mode);
         setMessages(data.messages);
+
+        // If the greeting arrived while panel is closed, show popup + sound
+        if (!isOpenRef.current && data.messages.length > 0) {
+          const lastMsg = data.messages.at(-1);
+          if (lastMsg && lastMsg.sender !== "VISITOR") {
+            setHasUnread(true);
+            setNotification({
+              message: lastMsg.content,
+              sender: lastMsg.sender,
+            });
+            playNotificationSound();
+          }
+        }
       },
     );
 
@@ -154,7 +167,19 @@ export function ChatProvider({ children }: { children: ReactNode }) {
 
     socket.connect();
 
+    // Proactive greeting: start chat in background after 10s if visitor hasn't opened it
+    const proactiveTimer = setTimeout(() => {
+      if (!hasStarted.current) {
+        hasStarted.current = true;
+        const s = getSocket();
+        if (s.connected) {
+          s.emit("chat:start", { sessionId: sessionIdRef.current });
+        }
+      }
+    }, 10_000);
+
     return () => {
+      clearTimeout(proactiveTimer);
       disconnectSocket();
       hasStarted.current = false;
     };

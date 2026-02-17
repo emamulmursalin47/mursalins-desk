@@ -60,15 +60,15 @@ export function ChatNotificationPopup({
       onClick={onClick}
       className="fixed bottom-24 right-6 z-50 w-72 cursor-pointer max-sm:bottom-22 max-sm:right-4 max-sm:w-[calc(100vw-5rem)]"
     >
-      <div className="rounded-2xl border border-white/10 bg-[oklch(0.20_0.008_250/0.95)] p-3.5 shadow-[0_8px_32px_-8px_oklch(0.10_0.006_250/0.6)] backdrop-blur-xl">
+      <div className="rounded-2xl border border-white/15 bg-[oklch(0.16_0.01_260/0.98)] p-3.5 shadow-[0_8px_32px_-8px_oklch(0.05_0.01_260/0.7)] backdrop-blur-xl">
         {/* Header */}
         <div className="mb-1.5 flex items-center gap-2">
-          <div className="flex h-6 w-6 items-center justify-center rounded-full bg-primary-500/20">
+          <div className="flex h-6 w-6 items-center justify-center rounded-full bg-primary-500/25">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               viewBox="0 0 20 20"
               fill="currentColor"
-              className="h-3 w-3 text-primary-500"
+              className="h-3 w-3 text-primary-400"
             >
               <path
                 fillRule="evenodd"
@@ -77,7 +77,7 @@ export function ChatNotificationPopup({
               />
             </svg>
           </div>
-          <span className="text-xs font-semibold text-foreground">
+          <span className="text-xs font-semibold text-white">
             {sender === "ADMIN" ? "Mursalin" : "AI Assistant"}
           </span>
           {/* Dismiss button */}
@@ -86,7 +86,7 @@ export function ChatNotificationPopup({
               e.stopPropagation();
               onDismiss();
             }}
-            className="ml-auto flex h-5 w-5 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-white/10 hover:text-foreground"
+            className="ml-auto flex h-5 w-5 items-center justify-center rounded-full text-white/40 transition-colors hover:bg-white/10 hover:text-white"
             aria-label="Dismiss"
           >
             <svg
@@ -101,12 +101,12 @@ export function ChatNotificationPopup({
         </div>
 
         {/* Message preview */}
-        <p className="text-sm leading-relaxed text-muted-foreground">
+        <p className="text-sm leading-relaxed text-white/80">
           {truncated}
         </p>
 
         {/* Tap hint */}
-        <p className="mt-2 text-[10px] text-muted-foreground/50">
+        <p className="mt-2 text-[10px] text-white/35">
           Tap to open chat
         </p>
       </div>
