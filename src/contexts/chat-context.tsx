@@ -54,7 +54,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
   const [typingSender, setTypingSender] = useState<string | null>(null);
   const [mode, setMode] = useState<"AI" | "LIVE">("AI");
   const [hasUnread, setHasUnread] = useState(false);
-  const hasConnected = useRef(false);
+  const hasStarted = useRef(false);
   const isOpenRef = useRef(isOpen);
 
   // Keep ref in sync
@@ -63,16 +63,17 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     if (isOpen) setHasUnread(false);
   }, [isOpen]);
 
-  const connectAndStart = useCallback(() => {
-    if (hasConnected.current) return;
-    hasConnected.current = true;
-
+  // Connect socket eagerly on mount — connection is ready before user opens chat
+  useEffect(() => {
     const socket = getSocket();
     const sessionId = getSessionId();
 
     socket.on("connect", () => {
       setIsConnected(true);
-      socket.emit("chat:start", { sessionId });
+      // On reconnect, rejoin room if chat was already started
+      if (hasStarted.current) {
+        socket.emit("chat:start", { sessionId });
+      }
     });
 
     socket.on("disconnect", () => {
@@ -142,26 +143,35 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     });
 
     socket.on("chat:error", (data: { message: string }) => {
-      // Could show a toast, for now just log
       console.warn("Chat error:", data.message);
     });
 
+    // Connect immediately — the socket is ready by the time user opens chat
     socket.connect();
-  }, []);
 
-  // Cleanup on unmount
-  useEffect(() => {
     return () => {
       disconnectSocket();
-      hasConnected.current = false;
+      hasStarted.current = false;
     };
+  }, []);
+
+  // Start chat session (emit chat:start) — only on first open
+  const startChat = useCallback(() => {
+    if (hasStarted.current) return;
+    hasStarted.current = true;
+    const socket = getSocket();
+    const sessionId = getSessionId();
+    if (socket.connected) {
+      socket.emit("chat:start", { sessionId });
+    }
+    // If not connected yet, the "connect" handler above will emit chat:start
   }, []);
 
   const openChat = useCallback(() => {
     setIsOpen(true);
     setHasUnread(false);
-    connectAndStart();
-  }, [connectAndStart]);
+    startChat();
+  }, [startChat]);
 
   const closeChat = useCallback(() => {
     setIsOpen(false);
@@ -175,15 +185,12 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     }
   }, [isOpen, openChat, closeChat]);
 
-  const sendMessage = useCallback(
-    (content: string) => {
-      if (!content.trim()) return;
-      const socket = getSocket();
-      const sessionId = getSessionId();
-      socket.emit("chat:message", { sessionId, content: content.trim() });
-    },
-    [],
-  );
+  const sendMessage = useCallback((content: string) => {
+    if (!content.trim()) return;
+    const socket = getSocket();
+    const sessionId = getSessionId();
+    socket.emit("chat:message", { sessionId, content: content.trim() });
+  }, []);
 
   const sendVisitorInfo = useCallback((name: string, email: string) => {
     const socket = getSocket();
