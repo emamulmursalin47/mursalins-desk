@@ -10,12 +10,18 @@ import {
   type ReactNode,
 } from "react";
 import { getSocket, disconnectSocket } from "@/lib/socket";
+import { playNotificationSound } from "@/lib/notification-sound";
 
 export interface ChatMessage {
   id: string;
   sender: "VISITOR" | "AI" | "ADMIN";
   content: string;
   createdAt: string;
+}
+
+export interface NotificationPopup {
+  message: string;
+  sender: string;
 }
 
 interface ChatContextValue {
@@ -33,6 +39,8 @@ interface ChatContextValue {
   typingSender: string | null;
   mode: "AI" | "LIVE";
   hasUnread: boolean;
+  notification: NotificationPopup | null;
+  dismissNotification: () => void;
 }
 
 const ChatContext = createContext<ChatContextValue | undefined>(undefined);
@@ -45,6 +53,9 @@ export function ChatProvider({ children }: { children: ReactNode }) {
   const [typingSender, setTypingSender] = useState<string | null>(null);
   const [mode, setMode] = useState<"AI" | "LIVE">("AI");
   const [hasUnread, setHasUnread] = useState(false);
+  const [notification, setNotification] = useState<NotificationPopup | null>(
+    null,
+  );
   const hasStarted = useRef(false);
   const isOpenRef = useRef(isOpen);
 
@@ -93,8 +104,11 @@ export function ChatProvider({ children }: { children: ReactNode }) {
         return [...prev, msg];
       });
 
+      // Notification popup + sound when panel is closed and message is from AI/Admin
       if (!isOpenRef.current && msg.sender !== "VISITOR") {
         setHasUnread(true);
+        setNotification({ message: msg.content, sender: msg.sender });
+        playNotificationSound();
       }
     });
 
@@ -159,6 +173,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
   const openChat = useCallback(() => {
     setIsOpen(true);
     setHasUnread(false);
+    setNotification(null);
     startChat();
   }, [startChat]);
 
@@ -213,6 +228,10 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     sendMessage("I'd like to talk to a human please");
   }, [sendMessage]);
 
+  const dismissNotification = useCallback(() => {
+    setNotification(null);
+  }, []);
+
   return (
     <ChatContext.Provider
       value={{
@@ -230,6 +249,8 @@ export function ChatProvider({ children }: { children: ReactNode }) {
         typingSender,
         mode,
         hasUnread,
+        notification,
+        dismissNotification,
       }}
     >
       {children}

@@ -2,14 +2,26 @@
 
 import { useChat } from "@/contexts/chat-context";
 import { ChatPanel } from "./chat-panel";
+import { ChatNotificationPopup } from "./chat-notification-popup";
 
 export function ChatWidget() {
-  const { isOpen, toggleChat, hasUnread } = useChat();
+  const { isOpen, toggleChat, openChat, hasUnread, notification, dismissNotification } =
+    useChat();
 
   return (
     <>
       {/* Chat Panel */}
       {isOpen && <ChatPanel />}
+
+      {/* Notification Popup (only when panel is closed) */}
+      {!isOpen && notification && (
+        <ChatNotificationPopup
+          message={notification.message}
+          sender={notification.sender}
+          onDismiss={dismissNotification}
+          onClick={openChat}
+        />
+      )}
 
       {/* Floating Action Button */}
       <button

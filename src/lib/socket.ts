@@ -14,6 +14,10 @@ export function getSocket(): Socket {
       autoConnect: false,
       transports: ["websocket", "polling"],
       withCredentials: true,
+      reconnection: true,        // Auto-reconnect on drop
+      reconnectionAttempts: 10,  // Try 10 times before giving up
+      reconnectionDelay: 1000,   // Start at 1s
+      reconnectionDelayMax: 10000, // Cap at 10s
     });
   }
   return socket;
