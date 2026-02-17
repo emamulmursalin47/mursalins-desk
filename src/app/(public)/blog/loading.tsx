@@ -1,0 +1,68 @@
+export default function BlogLoading() {
+  return (
+    <div>
+      {/* Hero skeleton */}
+      <section className="relative overflow-hidden pt-32 pb-20">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="mx-auto max-w-3xl space-y-4 text-center">
+            <div className="skeleton mx-auto h-12 w-40 rounded-2xl" />
+            <div className="skeleton mx-auto h-5 w-80 max-w-full rounded-xl" />
+          </div>
+        </div>
+      </section>
+
+      {/* Filter bar skeleton */}
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="mb-10 flex gap-2 overflow-hidden">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} className="skeleton h-9 w-24 shrink-0 rounded-full" />
+          ))}
+        </div>
+
+        {/* Featured post skeleton */}
+        <div className="glass glass-shine mb-10 overflow-hidden rounded-2xl p-1">
+          <div className="flex flex-col gap-6 p-5 md:flex-row md:items-center">
+            <div className="skeleton aspect-video w-full rounded-xl md:w-1/2" />
+            <div className="flex-1 space-y-3">
+              <div className="skeleton h-4 w-20 rounded-full" />
+              <div className="skeleton h-7 w-full rounded-lg" />
+              <div className="skeleton h-4 w-full rounded" />
+              <div className="skeleton h-4 w-3/4 rounded" />
+              <div className="flex items-center gap-3 pt-2">
+                <div className="skeleton h-8 w-8 rounded-full" />
+                <div className="skeleton h-3 w-24 rounded" />
+                <div className="skeleton h-3 w-20 rounded" />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Grid skeleton */}
+        <div className="grid grid-cols-1 gap-6 pb-24 md:grid-cols-2 lg:grid-cols-3">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} className="glass glass-shine overflow-hidden rounded-2xl p-1">
+              <div className="skeleton aspect-video rounded-xl" />
+              <div className="space-y-3 p-5">
+                <div className="flex gap-2">
+                  <div className="skeleton h-3 w-20 rounded" />
+                  <div className="skeleton h-3 w-3 rounded-full" />
+                  <div className="skeleton h-3 w-16 rounded" />
+                </div>
+                <div className="skeleton h-5 w-4/5 rounded-lg" />
+                <div className="skeleton h-3 w-full rounded" />
+                <div className="skeleton h-3 w-2/3 rounded" />
+                <div className="flex items-center justify-between pt-2">
+                  <div className="flex items-center gap-2">
+                    <div className="skeleton h-6 w-6 rounded-full" />
+                    <div className="skeleton h-3 w-20 rounded" />
+                  </div>
+                  <div className="skeleton h-3 w-14 rounded" />
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
