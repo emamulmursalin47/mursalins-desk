@@ -73,16 +73,17 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     if (isOpen) setHasUnread(false);
   }, [isOpen]);
 
-  // Prime audio on first user interaction so notification sounds work
+  // Prime audio on valid user gestures (click/touch/key — NOT scroll)
+  // primeAudio() is safe to call repeatedly; it no-ops once ctx is running
   useEffect(() => {
     const unlock = () => primeAudio();
-    document.addEventListener("click", unlock, { once: true });
-    document.addEventListener("touchstart", unlock, { once: true });
-    document.addEventListener("scroll", unlock, { once: true });
+    document.addEventListener("click", unlock, { capture: true });
+    document.addEventListener("touchstart", unlock, { capture: true });
+    document.addEventListener("keydown", unlock, { capture: true });
     return () => {
-      document.removeEventListener("click", unlock);
-      document.removeEventListener("touchstart", unlock);
-      document.removeEventListener("scroll", unlock);
+      document.removeEventListener("click", unlock, { capture: true });
+      document.removeEventListener("touchstart", unlock, { capture: true });
+      document.removeEventListener("keydown", unlock, { capture: true });
     };
   }, []);
 

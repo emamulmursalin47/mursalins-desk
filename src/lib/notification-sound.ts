@@ -2,12 +2,12 @@
  * Notification sound using the Web Audio API.
  * Generates a pleasant two-tone chime — no external files needed.
  *
- * Browsers block audio before any user interaction (autoplay policy).
- * Call `primeAudio()` on the first user click/tap to unlock playback.
+ * Browsers block audio before a valid user gesture (click, tap, keydown).
+ * Call `primeAudio()` on user interaction to unlock playback.
+ * NOTE: scroll is NOT a valid gesture — only click/touch/key work.
  */
 
 let audioCtx: AudioContext | null = null;
-let primed = false;
 
 function getAudioContext(): AudioContext | null {
   if (typeof window === "undefined") return null;
@@ -20,43 +20,22 @@ function getAudioContext(): AudioContext | null {
 }
 
 /**
- * Call once on the first user gesture (click/tap) to unlock audio playback.
- * After this, `playNotificationSound()` will work reliably.
+ * Call on user gestures (click/touch/keydown) to unlock the AudioContext.
+ * Safe to call multiple times — only resumes if still suspended.
  */
 export function primeAudio() {
-  if (primed) return;
   const ctx = getAudioContext();
-  if (!ctx) return;
-  if (ctx.state === "suspended") {
-    ctx.resume();
-  }
-  // Play a silent buffer to fully unlock
-  const buf = ctx.createBuffer(1, 1, ctx.sampleRate);
-  const src = ctx.createBufferSource();
-  src.buffer = buf;
-  src.connect(ctx.destination);
-  src.start(0);
-  primed = true;
+  if (!ctx || ctx.state === "running") return;
+  ctx.resume().catch(() => {});
 }
 
-export function playNotificationSound() {
-  const ctx = getAudioContext();
-  if (!ctx) return;
-
-  // Try to resume — will only work if user has interacted
-  if (ctx.state === "suspended") {
-    ctx.resume().catch(() => {});
-  }
-
-  // Skip if context is still locked (no user interaction yet)
-  if (ctx.state !== "running") return;
-
+/** Play the two-tone chime — resolves after scheduling tones */
+function scheduleTones(ctx: AudioContext) {
   const now = ctx.currentTime;
 
-  // Two-tone chime: E5 → G5 (pleasant, non-intrusive)
   const tones: [number, number][] = [
-    [659.25, 0.15],
-    [783.99, 0.22],
+    [659.25, 0.15], // E5
+    [783.99, 0.22], // G5
   ];
 
   let offset = 0;
@@ -78,5 +57,32 @@ export function playNotificationSound() {
     osc.stop(now + offset + dur);
 
     offset += dur * 0.75;
+  }
+}
+
+/**
+ * Play notification sound if audio is unlocked.
+ * If the context is suspended, attempts to resume first (may fail
+ * if no user gesture has occurred yet — sound is silently skipped).
+ */
+export function playNotificationSound() {
+  const ctx = getAudioContext();
+  if (!ctx) return;
+
+  if (ctx.state === "running") {
+    scheduleTones(ctx);
+    return;
+  }
+
+  // Try to resume — will only succeed if a user gesture has occurred
+  if (ctx.state === "suspended") {
+    ctx
+      .resume()
+      .then(() => {
+        if (ctx.state === "running") {
+          scheduleTones(ctx);
+        }
+      })
+      .catch(() => {});
   }
 }
