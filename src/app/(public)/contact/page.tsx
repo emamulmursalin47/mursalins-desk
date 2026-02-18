@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import type { Metadata } from "next";
 import { getServices, getSettings } from "@/lib/api";
 import { ContactHero } from "@/components/contact/contact-hero";
@@ -20,7 +21,9 @@ export default async function ContactPage() {
     <>
       <ContactHero settings={settings} />
       <ClientJourney />
-      <ContactTabs services={services} settings={settings} />
+      <Suspense>
+        <ContactTabs services={services} settings={settings} />
+      </Suspense>
     </>
   );
 }
