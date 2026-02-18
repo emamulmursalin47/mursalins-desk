@@ -1,5 +1,3 @@
-export const dynamic = "force-dynamic";
-
 import type { Metadata } from "next";
 import { getSettings } from "@/lib/api";
 import { AppointmentHero } from "@/components/appointments/appointment-hero";

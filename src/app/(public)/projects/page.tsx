@@ -1,5 +1,3 @@
-export const dynamic = "force-dynamic";
-
 import type { Metadata } from "next";
 import { getProjects } from "@/lib/api";
 import { ProjectsHero } from "@/components/projects/projects-hero";

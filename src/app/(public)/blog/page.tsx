@@ -1,5 +1,3 @@
-export const dynamic = "force-dynamic";
-
 import type { Metadata } from "next";
 import { getFilteredPosts, getCategories } from "@/lib/api";
 import { constructMetadata } from "@/lib/metadata";

@@ -1,5 +1,3 @@
-export const dynamic = "force-dynamic";
-
 import { getExperiences, getSkills } from "@/lib/api";
 import { AboutHero } from "@/components/about/about-hero";
 import { AboutStory } from "@/components/about/about-story";

@@ -1,5 +1,3 @@
-export const dynamic = "force-dynamic";
-
 import type { Metadata } from "next";
 import { getProducts } from "@/lib/api";
 import { ProductsHero } from "@/components/products/products-hero";

@@ -1,5 +1,3 @@
-export const dynamic = "force-dynamic";
-
 import type { Metadata } from "next";
 import { getServices, getSettings } from "@/lib/api";
 import { ContactHero } from "@/components/contact/contact-hero";
