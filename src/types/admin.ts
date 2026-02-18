@@ -164,6 +164,7 @@ export interface AdminPost {
   isFeatured: boolean;
   metaTitle: string | null;
   metaDescription: string | null;
+  seoKeywords: string | null;
   canonicalUrl: string | null;
   ogImage: string | null;
   createdAt: string;
