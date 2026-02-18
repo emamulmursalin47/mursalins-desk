@@ -20,8 +20,15 @@ function getAudioContext(): AudioContext | null {
 }
 
 /**
+ * Returns true if AudioContext is already running (no priming needed).
+ */
+export function isAudioReady(): boolean {
+  return audioCtx?.state === "running";
+}
+
+/**
  * Call on user gestures (click/touch/keydown) to unlock the AudioContext.
- * Safe to call multiple times — only resumes if still suspended.
+ * Safe to call multiple times — no-ops if already running.
  */
 export function primeAudio() {
   const ctx = getAudioContext();
@@ -29,7 +36,7 @@ export function primeAudio() {
   ctx.resume().catch(() => {});
 }
 
-/** Play the two-tone chime — resolves after scheduling tones */
+/** Play the two-tone chime */
 function scheduleTones(ctx: AudioContext) {
   const now = ctx.currentTime;
 
@@ -62,8 +69,7 @@ function scheduleTones(ctx: AudioContext) {
 
 /**
  * Play notification sound if audio is unlocked.
- * If the context is suspended, attempts to resume first (may fail
- * if no user gesture has occurred yet — sound is silently skipped).
+ * If suspended, attempts resume first (may fail without prior user gesture).
  */
 export function playNotificationSound() {
   const ctx = getAudioContext();
@@ -74,7 +80,6 @@ export function playNotificationSound() {
     return;
   }
 
-  // Try to resume — will only succeed if a user gesture has occurred
   if (ctx.state === "suspended") {
     ctx
       .resume()

@@ -13,6 +13,7 @@ import { getSocket, disconnectSocket } from "@/lib/socket";
 import {
   playNotificationSound,
   primeAudio,
+  isAudioReady,
 } from "@/lib/notification-sound";
 
 export interface ChatMessage {
@@ -73,17 +74,24 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     if (isOpen) setHasUnread(false);
   }, [isOpen]);
 
-  // Prime audio on valid user gestures (click/touch/key — NOT scroll)
-  // primeAudio() is safe to call repeatedly; it no-ops once ctx is running
+  // Prime audio on first valid user gesture, then remove listeners
   useEffect(() => {
-    const unlock = () => primeAudio();
-    document.addEventListener("click", unlock, { capture: true });
-    document.addEventListener("touchstart", unlock, { capture: true });
-    document.addEventListener("keydown", unlock, { capture: true });
+    const unlock = () => {
+      primeAudio();
+      // Remove all listeners once audio is unlocked
+      if (isAudioReady()) {
+        document.removeEventListener("click", unlock);
+        document.removeEventListener("touchstart", unlock);
+        document.removeEventListener("keydown", unlock);
+      }
+    };
+    document.addEventListener("click", unlock);
+    document.addEventListener("touchstart", unlock);
+    document.addEventListener("keydown", unlock);
     return () => {
-      document.removeEventListener("click", unlock, { capture: true });
-      document.removeEventListener("touchstart", unlock, { capture: true });
-      document.removeEventListener("keydown", unlock, { capture: true });
+      document.removeEventListener("click", unlock);
+      document.removeEventListener("touchstart", unlock);
+      document.removeEventListener("keydown", unlock);
     };
   }, []);
 
