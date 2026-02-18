@@ -815,9 +815,9 @@ body {
     0 2px 8px -2px oklch(0.67 0.16 68 / 0.3);
 }
 
-/* ── Progressive enhancement: hide animated elements only when JS runs ── */
-.has-js [data-animate],
-.has-js [data-gsap] {
+/* ── Progressive enhancement: hide animated elements only on public pages ── */
+.has-js [data-public] [data-animate],
+.has-js [data-public] [data-gsap] {
   visibility: hidden;
 }
 
@@ -1083,4 +1083,57 @@ body {
 
 .glass-spotlight:hover::after {
   opacity: 1;
+}
+
+/* ── Iridescent (Soap Bubble) Border ── */
+@keyframes iridescent-spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes iridescent-breathe {
+  0%, 100% { opacity: 0.8; }
+  50% { opacity: 1; }
+}
+
+.iridescent-border {
+  position: relative;
+  padding: 2px;
+  border-radius: inherit;
+  overflow: hidden;
+}
+
+.iridescent-border::before {
+  content: "";
+  position: absolute;
+  inset: -50%;
+  background: conic-gradient(
+    oklch(0.80 0.13 350),
+    oklch(0.72 0.15 310),
+    oklch(0.70 0.16 290),
+    oklch(0.74 0.13 250),
+    oklch(0.78 0.11 210),
+    oklch(0.82 0.12 170),
+    oklch(0.84 0.11 140),
+    oklch(0.86 0.11 95),
+    oklch(0.83 0.12 60),
+    oklch(0.80 0.13 350)
+  );
+  animation: iridescent-spin 4s linear infinite;
+}
+
+.iridescent-border::after {
+  content: "";
+  position: absolute;
+  inset: -50%;
+  background: conic-gradient(
+    oklch(0.82 0.10 170),
+    oklch(0.78 0.14 290),
+    oklch(0.84 0.10 85),
+    oklch(0.76 0.12 350),
+    oklch(0.80 0.11 250),
+    oklch(0.82 0.10 170)
+  );
+  animation: iridescent-spin 7s linear infinite reverse;
+  opacity: 0.5;
+  mix-blend-mode: screen;
 }

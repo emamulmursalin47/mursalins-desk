@@ -11,7 +11,7 @@ export default function PublicLayout({
   return (
     <ChatProvider>
       <Navbar />
-      <main className="min-h-dvh">{children}</main>
+      <main data-public className="min-h-dvh">{children}</main>
       <Footer />
       <ChatWidget />
     </ChatProvider>
