@@ -442,12 +442,12 @@ export function ExperienceTimeline({ experiences }: ExperienceTimelineProps) {
                       >
                         {/* Company logo — top right */}
                         {exp.companyLogo && (
-                          <div className="absolute right-4 top-4 flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-white/80 p-1 shadow-sm ring-1 ring-black/5">
+                          <div className="absolute right-4 top-4 flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-white/80 p-1.5 shadow-sm ring-1 ring-black/5">
                             <Image
                               src={exp.companyLogo}
                               alt={exp.company}
-                              width={32}
-                              height={32}
+                              width={48}
+                              height={48}
                               className="h-full w-full object-contain"
                             />
                           </div>
@@ -502,7 +502,7 @@ export function ExperienceTimeline({ experiences }: ExperienceTimelineProps) {
                         {exp.description && (
                           <p
                             data-reveal
-                            className="mt-2.5 text-sm leading-relaxed text-muted-foreground"
+                            className="mt-2.5 text-sm leading-relaxed text-muted-foreground text-justify"
                           >
                             {exp.description}
                           </p>
