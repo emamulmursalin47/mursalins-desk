@@ -82,21 +82,21 @@ async function authFetcher<T>(
 
 export function getSkills() {
   return fetcher<Skill[]>("/skills", {
-    revalidate: 3600,
+    revalidate: 60,
     tags: ["skills"],
   });
 }
 
 export function getExperiences() {
   return fetcher<Experience[]>("/experiences", {
-    revalidate: 3600,
+    revalidate: 60,
     tags: ["experiences"],
   });
 }
 
 export function getServices() {
   return fetcher<Service[]>("/services", {
-    revalidate: 3600,
+    revalidate: 60,
     tags: ["services"],
   });
 }
@@ -116,14 +116,14 @@ export async function getServiceBySlug(
 export function getProjects(page = 1, limit = 6) {
   return fetcher<PaginatedResult<Project>>(
     `/projects?page=${page}&limit=${limit}`,
-    { revalidate: 600, tags: ["projects"] },
+    { revalidate: 60, tags: ["projects"] },
   );
 }
 
 export function getProducts(page = 1, limit = 6) {
   return fetcher<PaginatedResult<Product>>(
     `/products?page=${page}&limit=${limit}`,
-    { revalidate: 600, tags: ["products"] },
+    { revalidate: 60, tags: ["products"] },
   );
 }
 
@@ -132,7 +132,7 @@ export async function getProductBySlug(
 ): Promise<Product | null> {
   try {
     return await fetcher<Product>(`/products/slug/${slug}`, {
-      revalidate: 600,
+      revalidate: 60,
       tags: ["products"],
     });
   } catch {
@@ -143,14 +143,14 @@ export async function getProductBySlug(
 export function getProductReviews(productId: string, page = 1, limit = 20) {
   return fetcher<PaginatedResult<Review>>(
     `/reviews/product/${productId}?page=${page}&limit=${limit}`,
-    { revalidate: 300, tags: ["reviews"] },
+    { revalidate: 60, tags: ["reviews"] },
   );
 }
 
 export function getPosts(page = 1, limit = 3) {
   return fetcher<PaginatedResult<Post>>(
     `/blog/posts?page=${page}&limit=${limit}`,
-    { revalidate: 300, tags: ["posts"] },
+    { revalidate: 60, tags: ["posts"] },
   );
 }
 
@@ -163,7 +163,7 @@ export async function getFilteredPosts(
   const fetchLimit = category ? 100 : limit;
   const result = await fetcher<PaginatedResult<Post>>(
     `/blog/posts?page=${category ? 1 : page}&limit=${fetchLimit}`,
-    { revalidate: 300, tags: ["posts"] },
+    { revalidate: 60, tags: ["posts"] },
   );
 
   if (!category) return result;
@@ -190,7 +190,7 @@ export async function getFilteredPosts(
 export async function getPostBySlug(slug: string): Promise<Post | null> {
   try {
     return await fetcher<Post>(`/blog/posts/slug/${slug}`, {
-      revalidate: 300,
+      revalidate: 60,
       tags: ["posts"],
     });
   } catch {
@@ -201,7 +201,7 @@ export async function getPostBySlug(slug: string): Promise<Post | null> {
 export async function getCategories() {
   const result = await fetcher<PaginatedResult<Category>>(
     "/blog/categories",
-    { revalidate: 3600, tags: ["categories"] },
+    { revalidate: 60, tags: ["categories"] },
   );
   return result.data;
 }
@@ -209,34 +209,34 @@ export async function getCategories() {
 export function getTestimonials(page = 1, limit = 10) {
   return fetcher<PaginatedResult<Testimonial>>(
     `/testimonials?page=${page}&limit=${limit}`,
-    { revalidate: 1800, tags: ["testimonials"] },
+    { revalidate: 60, tags: ["testimonials"] },
   );
 }
 
 export function getFAQs() {
   return fetcher<FAQ[]>("/faq", {
-    revalidate: 3600,
+    revalidate: 60,
     tags: ["faq"],
   });
 }
 
 export function getTrustedCompanies() {
   return fetcher<TrustedCompany[]>("/trusted-companies", {
-    revalidate: 3600,
+    revalidate: 60,
     tags: ["trusted-companies"],
   });
 }
 
 export function getFeaturedTestimonial() {
   return fetcher<Testimonial | null>("/testimonials/featured", {
-    revalidate: 1800,
+    revalidate: 60,
     tags: ["testimonials"],
   });
 }
 
 export function getSettings() {
   return fetcher<SiteSetting[]>("/settings", {
-    revalidate: 3600,
+    revalidate: 60,
     tags: ["settings"],
   });
 }
@@ -247,13 +247,13 @@ export async function getProjectBySlug(
   try {
     const all = await fetcher<PaginatedResult<Project>>(
       `/projects?limit=100`,
-      { revalidate: 600, tags: ["projects"] },
+      { revalidate: 60, tags: ["projects"] },
     );
     const match = all.data.find((p) => p.slug === slug);
     if (!match) return null;
 
     return await fetcher<ProjectWithMilestones>(`/projects/${match.id}`, {
-      revalidate: 600,
+      revalidate: 60,
       tags: ["projects"],
     });
   } catch {
