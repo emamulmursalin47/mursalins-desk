@@ -5,7 +5,7 @@ export const siteConfig = {
   description:
     "Portfolio of Md. Emamul Mursalin — software engineer from Bangladesh specializing in full-stack web development, SaaS platforms, and e-commerce solutions. Explore projects, services, and digital products.",
   url: process.env.NEXT_PUBLIC_SITE_URL ?? "https://mursalinsdesk.com",
-  ogImage: `${process.env.NEXT_PUBLIC_SITE_URL ?? "https://mursalinsdesk.com"}/logo.png`,
+  ogImage: `${process.env.NEXT_PUBLIC_SITE_URL ?? "https://mursalinsdesk.com"}/opengraph-image`,
   links: {
     github: "https://github.com/emamulmursalin47",
     linkedin: "https://www.linkedin.com/in/mdemamulmursalin/",

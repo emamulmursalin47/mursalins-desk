@@ -3,6 +3,7 @@ import localFont from "next/font/local";
 import { Playfair_Display } from "next/font/google";
 import { defaultMetadata } from "@/config/seo";
 import { WebsiteJsonLd, OrganizationJsonLd } from "@/components/seo/json-ld";
+import { GoogleAnalytics } from "@/components/analytics/google-analytics";
 import { WaterCanvas } from "@/components/layout/water-canvas";
 import { AuthProvider } from "@/contexts/auth-context";
 import "./globals.css";
@@ -55,6 +56,7 @@ export default function RootLayout({
         <OrganizationJsonLd />
       </head>
       <body className="font-sans antialiased">
+        <GoogleAnalytics />
         <div className="bg-orbs" aria-hidden="true">
           <div className="orb-lavender" />
           <div className="orb-gold" />
