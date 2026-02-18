@@ -35,7 +35,7 @@ export function ProductsSpotlight({ products }: ProductsSpotlightProps) {
       <div className="pointer-events-none absolute right-0 bottom-20 h-96 w-96 rounded-full bg-accent-100/25 blur-3xl" />
 
       <Container>
-      <div ref={headingRef} className="relative mb-12 text-center">
+      <div ref={headingRef} data-gsap className="relative mb-12 text-center">
         <h2 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
           Digital Products
         </h2>
@@ -53,7 +53,7 @@ export function ProductsSpotlight({ products }: ProductsSpotlightProps) {
         ))}
       </div>
 
-      <div ref={ctaRef} className="mt-10 text-center">
+      <div ref={ctaRef} data-gsap className="mt-10 text-center">
         <Link
           href="/store"
           className="inline-flex items-center gap-2 text-sm font-medium text-accent-600 transition-colors hover:text-accent-700"

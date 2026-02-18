@@ -80,10 +80,7 @@ export function ServiceCategoryCard({ group }: { group: ServiceCategory }) {
         <div className="flex flex-1 flex-col p-6">
           {/* Header: title + price badge */}
           <div className="flex items-start justify-between gap-3">
-            <div className="flex items-center gap-3">
-              {starter?.iconUrl && (
-                <span className="text-xl">{starter.iconUrl}</span>
-              )}
+            <div>
               <h3 className="text-lg font-semibold leading-snug text-foreground">
                 {group.categoryLabel}
               </h3>

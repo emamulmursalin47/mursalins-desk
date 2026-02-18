@@ -173,6 +173,7 @@ export function ProjectDetailView({
           <Container>
             <div
               ref={heroRef}
+              data-gsap
               className="relative overflow-hidden rounded-2xl bg-muted aspect-video sm:rounded-3xl sm:aspect-21/9"
             >
               <Image
@@ -191,7 +192,7 @@ export function ProjectDetailView({
       {/* ── 2. Header ── */}
       <section className={project.featuredImage ? "py-8 sm:py-12" : "pt-24 pb-8 sm:pt-32 sm:pb-12"}>
         <Container>
-          <div ref={headerRef} className="space-y-3 sm:space-y-4">
+          <div ref={headerRef} data-gsap className="space-y-3 sm:space-y-4">
             {/* Badges row */}
             <div className="flex flex-wrap items-center gap-2" data-animate>
               <span
@@ -326,6 +327,7 @@ export function ProjectDetailView({
           <Container>
             <div
               ref={challengeRef}
+              data-gsap
               className="glass-card glass-shine rounded-xl border-l-4 border-l-amber-500 p-5 sm:rounded-2xl sm:p-8"
             >
               <h2 className="mb-3 text-lg font-bold text-foreground sm:mb-4 sm:text-xl">
@@ -345,6 +347,7 @@ export function ProjectDetailView({
           <Container>
             <div
               ref={approachRef}
+              data-gsap
               className="glass-card glass-shine rounded-xl border-l-4 border-l-blue-500 p-5 sm:rounded-2xl sm:p-8"
             >
               <h2 className="mb-3 text-lg font-bold text-foreground sm:mb-4 sm:text-xl">
@@ -580,7 +583,7 @@ export function ProjectDetailView({
       {hasBadges && (
         <section className="py-6 sm:py-8">
           <Container>
-            <div ref={badgesRef} className="flex flex-wrap justify-center gap-2 sm:gap-3">
+            <div ref={badgesRef} data-gsap className="flex flex-wrap justify-center gap-2 sm:gap-3">
               {project.qualityBadges.map((badge) => (
                 <span
                   key={badge}
@@ -635,6 +638,7 @@ export function ProjectDetailView({
           <Container>
             <div
               ref={ctaRef}
+              data-gsap
               className="glass-card glass-shine rounded-2xl p-6 text-center sm:rounded-3xl sm:p-8"
             >
               <h2 className="mb-4 text-lg font-bold text-foreground sm:mb-6 sm:text-xl">
@@ -689,7 +693,7 @@ export function ProjectDetailView({
       {/* ── 16. Back link ── */}
       <section className="py-8 sm:py-12">
         <Container>
-          <div ref={backRef} className="text-center">
+          <div ref={backRef} data-gsap className="text-center">
             <Link
               href="/projects"
               className="inline-flex items-center gap-2 text-sm font-medium text-primary-500 transition-colors hover:text-primary-600"

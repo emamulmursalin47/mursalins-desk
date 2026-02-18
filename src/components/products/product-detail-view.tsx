@@ -145,6 +145,7 @@ export function ProductDetailView({
           <Container>
             <div
               ref={heroRef}
+              data-gsap
               className="relative overflow-hidden rounded-2xl bg-muted aspect-video sm:rounded-3xl sm:aspect-21/9"
             >
               <Image
@@ -163,7 +164,7 @@ export function ProductDetailView({
       {/* ── 2. Header ── */}
       <section className={product.thumbnailUrl ? "py-8 sm:py-12" : "pt-24 pb-8 sm:pt-32 sm:pb-12"}>
         <Container>
-          <div ref={headerRef} className="space-y-3 sm:space-y-4">
+          <div ref={headerRef} data-gsap className="space-y-3 sm:space-y-4">
             {/* Badges row */}
             <div className="flex flex-wrap items-center gap-2" data-animate>
               <span className="inline-flex items-center rounded-full border border-primary-500/20 bg-primary-50 px-2.5 py-0.5 text-xs font-medium text-primary-600 sm:px-3 sm:py-1 sm:text-sm">
@@ -269,6 +270,7 @@ export function ProductDetailView({
         <Container>
           <div
             ref={licenseRef}
+            data-gsap
             className="glass-card glass-shine rounded-xl border-l-4 border-l-accent-500 p-5 sm:rounded-2xl sm:p-8"
           >
             <h2 className="mb-3 text-lg font-bold text-foreground sm:mb-4 sm:text-xl">
@@ -300,6 +302,7 @@ export function ProductDetailView({
           <Container>
             <div
               ref={descriptionRef}
+              data-gsap
               className="glass-card glass-shine rounded-xl p-5 sm:rounded-2xl sm:p-8"
             >
               <h2 className="mb-3 text-lg font-bold text-foreground sm:mb-4 sm:text-xl">
@@ -382,7 +385,7 @@ export function ProductDetailView({
       {/* ── 7. Reviews ── */}
       <section id="reviews" className="py-8 sm:py-12 scroll-mt-24">
         <Container>
-          <div ref={reviewsRef} className="space-y-6">
+          <div ref={reviewsRef} data-gsap className="space-y-6">
             {/* Summary card — only when reviews exist */}
             {reviews.length > 0 && (
               <div className="glass-card glass-shine rounded-xl p-5 sm:rounded-2xl sm:p-8">
@@ -486,6 +489,7 @@ export function ProductDetailView({
         <Container>
           <div
             ref={ctaRef}
+            data-gsap
             className="glass-card glass-shine rounded-2xl p-6 text-center sm:rounded-3xl sm:p-8"
           >
             <h2 className="mb-2 text-lg font-bold text-foreground sm:text-xl">
@@ -538,7 +542,7 @@ export function ProductDetailView({
       {/* ── 11. Back link ── */}
       <section className="py-8 sm:py-12">
         <Container>
-          <div ref={backRef} className="text-center">
+          <div ref={backRef} data-gsap className="text-center">
             <Link
               href="/store"
               className="inline-flex items-center gap-2 text-sm font-medium text-accent-500 transition-colors hover:text-accent-600"

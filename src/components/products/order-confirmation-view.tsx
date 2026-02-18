@@ -37,7 +37,7 @@ export function OrderConfirmationView({ order }: OrderConfirmationViewProps) {
       <Container>
         <div className="mx-auto max-w-2xl">
           {/* Success icon */}
-          <div ref={heroRef} className="text-center">
+          <div ref={heroRef} data-gsap className="text-center">
             <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-success/10">
               <svg
                 width="40"
@@ -63,7 +63,7 @@ export function OrderConfirmationView({ order }: OrderConfirmationViewProps) {
           </div>
 
           {/* Order details card */}
-          <div ref={cardRef} className="mt-10 glass rounded-2xl p-6 sm:p-8">
+          <div ref={cardRef} data-gsap className="mt-10 glass rounded-2xl p-6 sm:p-8">
             {/* Order header */}
             <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border pb-4">
               <div>
@@ -183,6 +183,7 @@ export function OrderConfirmationView({ order }: OrderConfirmationViewProps) {
           {/* Actions */}
           <div
             ref={actionsRef}
+            data-gsap
             className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center"
           >
             <Link

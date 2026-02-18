@@ -140,6 +140,7 @@ export function BlogGrid({
         {/* Category filter pills */}
         <div
           ref={filterRef}
+          data-gsap
           className="relative mb-10 flex gap-2 overflow-x-auto pb-2 scrollbar-hide"
         >
           {/* Sliding pill */}
@@ -185,7 +186,7 @@ export function BlogGrid({
 
         {/* Featured post */}
         {featuredPost && (
-          <div ref={featuredRef} className="mb-10">
+          <div ref={featuredRef} data-gsap className="mb-10">
             <BlogFeaturedCard post={featuredPost} />
           </div>
         )}

@@ -235,7 +235,7 @@ export function CheckoutView({ product }: CheckoutViewProps) {
 
         <div className="grid gap-10 lg:grid-cols-5">
           {/* Left — Product Summary */}
-          <div ref={summaryRef} className="lg:col-span-2">
+          <div ref={summaryRef} data-gsap className="lg:col-span-2">
             <div className="glass sticky top-28 rounded-2xl p-6">
               {/* Thumbnail */}
               <div className="relative aspect-video overflow-hidden rounded-xl bg-muted">
@@ -321,7 +321,7 @@ export function CheckoutView({ product }: CheckoutViewProps) {
           </div>
 
           {/* Right — Checkout Form */}
-          <div ref={formRef} className="lg:col-span-3">
+          <div ref={formRef} data-gsap className="lg:col-span-3">
             <h1 className="text-3xl font-bold text-foreground">Checkout</h1>
             <p className="mt-2 text-muted-foreground">
               Complete your purchase for{" "}

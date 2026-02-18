@@ -98,14 +98,16 @@ export function HeroSection({
     }
     if (photoRef.current) {
       gsap.from(photoRef.current, {
-        opacity: 0,
+        autoAlpha: 0,
         x: 40,
         scale: 0.95,
         duration: 1,
         ease: GSAP_EASE,
         delay: 0.4,
+        immediateRender: true,
         onComplete() {
-          gsap.set(photoRef.current, { clearProps: "transform,opacity" });
+          photoRef.current?.removeAttribute("data-gsap");
+          gsap.set(photoRef.current, { clearProps: "all" });
         },
       });
 
@@ -240,6 +242,7 @@ export function HeroSection({
           {/* Right — Photo + floating cards */}
           <div
             ref={photoRef}
+            data-gsap
             className="relative flex justify-center lg:justify-end"
           >
             <div className="relative h-104 w-84 max-w-full sm:h-128 sm:w-100">
@@ -298,7 +301,7 @@ export function HeroSection({
         </div>
 
         {/* Trust section */}
-        {trustedCompanies.length > 0 && <div ref={trustRef} className="relative mt-20 w-full">
+        {trustedCompanies.length > 0 && <div ref={trustRef} data-gsap className="relative mt-20 w-full">
           <div className="flex flex-col items-center gap-6">
             <p className="text-xs font-medium uppercase tracking-widest text-muted-foreground/70">
               Trusted by innovative companies

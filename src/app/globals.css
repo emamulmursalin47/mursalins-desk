@@ -815,6 +815,12 @@ body {
     0 2px 8px -2px oklch(0.67 0.16 68 / 0.3);
 }
 
+/* ── Progressive enhancement: hide animated elements only when JS runs ── */
+.has-js [data-animate],
+.has-js [data-gsap] {
+  visibility: hidden;
+}
+
 /* ── Apple-inspired Skeleton Loader ── */
 @keyframes skeleton-shimmer {
   0% { background-position: -200% 0; }

@@ -32,7 +32,7 @@ function CategorySection({ group }: { group: ServiceCategory }) {
       {/* Ambient orb per section */}
       <div className="pointer-events-none absolute right-0 top-0 h-64 w-64 rounded-full bg-accent-100/20 blur-3xl" />
 
-      <div ref={headingRef} className="mb-10 text-center">
+      <div ref={headingRef} data-gsap className="mb-10 text-center">
         <h2 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
           {group.categoryLabel}
         </h2>

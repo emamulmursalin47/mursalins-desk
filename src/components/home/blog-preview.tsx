@@ -32,7 +32,7 @@ export function BlogPreview({ posts }: BlogPreviewProps) {
   return (
     <section className="relative py-16">
       <Container>
-      <div ref={headingRef} className="mb-12 text-center">
+      <div ref={headingRef} data-gsap className="mb-12 text-center">
         <h2 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
           Latest Posts
         </h2>
@@ -50,7 +50,7 @@ export function BlogPreview({ posts }: BlogPreviewProps) {
         ))}
       </div>
 
-      <div ref={ctaRef} className="mt-10 text-center">
+      <div ref={ctaRef} data-gsap className="mt-10 text-center">
         <Link
           href="/blog"
           className="inline-flex items-center gap-2 text-sm font-medium text-primary-500 transition-colors hover:text-primary-600"

@@ -57,7 +57,7 @@ export function SkillsSection({ skills }: SkillsSectionProps) {
       <div className="pointer-events-none absolute right-0 top-1/3 h-64 w-64 rounded-full bg-accent-100/20 blur-3xl" />
 
       <Container>
-        <div ref={headingRef} className="relative mb-12 text-center">
+        <div ref={headingRef} data-gsap className="relative mb-12 text-center">
           <h2 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
             Tech Stack
           </h2>

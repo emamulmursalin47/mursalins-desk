@@ -23,7 +23,7 @@ export function AboutStory() {
       <Container>
         <div className="mx-auto max-w-3xl">
           {/* Pull-quote */}
-          <div ref={quoteRef} className="text-center">
+          <div ref={quoteRef} data-gsap className="text-center">
             <p className="text-2xl font-semibold leading-snug tracking-tight text-foreground sm:text-3xl">
               &ldquo;I believe great software should feel invisible&nbsp;&mdash;
               it just works, and the people using it never have to think

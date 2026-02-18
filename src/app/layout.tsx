@@ -46,6 +46,11 @@ export default function RootLayout({
       data-scroll-behavior="smooth"
     >
       <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: "document.documentElement.classList.add('has-js')",
+          }}
+        />
         <WebsiteJsonLd />
         <OrganizationJsonLd />
       </head>

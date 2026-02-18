@@ -51,7 +51,7 @@ export function AboutValues() {
       <div className="pointer-events-none absolute left-0 top-1/3 h-80 w-80 rounded-full bg-primary-100/25 blur-3xl" />
 
       <Container>
-        <div ref={headingRef} className="relative mb-10 text-center">
+        <div ref={headingRef} data-gsap className="relative mb-10 text-center">
           <h2 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
             How I Work
           </h2>

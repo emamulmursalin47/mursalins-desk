@@ -157,6 +157,7 @@ export function ProductsGrid({ products, meta }: ProductsGridProps) {
         {allTypes.length > 0 && (
           <div
             ref={filtersRef}
+            data-gsap
             className="sticky top-20 z-30 -mx-4 px-4 py-3 backdrop-blur-xl bg-background/80 sm:top-20 sm:mx-0 sm:px-0 sm:rounded-2xl"
           >
             <div ref={pillListRef} className="relative flex flex-wrap gap-2">

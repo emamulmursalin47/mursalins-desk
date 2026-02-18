@@ -91,7 +91,7 @@ export function TestimonialsSection({
       onMouseLeave={() => (isPaused.current = false)}
     >
       <Container>
-        <div ref={headingRef} className="mb-12 text-center">
+        <div ref={headingRef} data-gsap className="mb-12 text-center">
           <h2 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
             What People Say
           </h2>

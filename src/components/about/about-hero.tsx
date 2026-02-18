@@ -24,14 +24,16 @@ export function AboutHero() {
   useGSAP(() => {
     if (photoRef.current) {
       gsap.from(photoRef.current, {
-        opacity: 0,
+        autoAlpha: 0,
         x: -40,
         scale: 0.95,
         duration: 1,
         ease: GSAP_EASE,
         delay: 0.2,
+        immediateRender: true,
         onComplete() {
-          gsap.set(photoRef.current, { clearProps: "transform,opacity" });
+          photoRef.current?.removeAttribute("data-gsap");
+          gsap.set(photoRef.current, { clearProps: "all" });
         },
       });
     }
@@ -56,7 +58,7 @@ export function AboutHero() {
       <Container>
         <div className="relative grid grid-cols-1 items-center gap-12 lg:grid-cols-2 lg:gap-20">
           {/* Left — Photo */}
-          <div ref={photoRef} className="flex justify-center lg:justify-start">
+          <div ref={photoRef} data-gsap className="flex justify-center lg:justify-start">
             <div className="relative h-104 w-84 max-w-full sm:h-128 sm:w-100">
               <div className="glass-frame glass-shine relative h-full w-full overflow-hidden rounded-3xl px-2 pt-2">
                 <Image

@@ -152,9 +152,14 @@ export function ExperienceTimeline({ experiences }: ExperienceTimelineProps) {
         if (!node) return;
         gsap.from(node, {
           scale: 0,
-          opacity: 0,
+          autoAlpha: 0,
           duration: 0.5,
           ease: "back.out(2)",
+          immediateRender: true,
+          onComplete() {
+            node.removeAttribute("data-gsap");
+            gsap.set(node, { clearProps: "all" });
+          },
           scrollTrigger: {
             trigger: node,
             start: "top 85%",
@@ -170,9 +175,14 @@ export function ExperienceTimeline({ experiences }: ExperienceTimelineProps) {
 
         gsap.from(card, {
           x: isLeft ? -30 : 30,
-          opacity: 0,
+          autoAlpha: 0,
           duration: 0.6,
           ease: "power2.out",
+          immediateRender: true,
+          onComplete() {
+            card.removeAttribute("data-gsap");
+            gsap.set(card, { clearProps: "all" });
+          },
           scrollTrigger: {
             trigger: card,
             start: "top 85%",
@@ -183,12 +193,20 @@ export function ExperienceTimeline({ experiences }: ExperienceTimelineProps) {
         const children = card.querySelectorAll("[data-reveal]");
         if (children.length > 0) {
           gsap.from(children, {
-            opacity: 0,
+            autoAlpha: 0,
             y: 10,
             duration: 0.35,
             stagger: 0.06,
             ease: "power2.out",
             delay: 0.15,
+            immediateRender: true,
+            onComplete() {
+              children.forEach((el) => {
+                el.removeAttribute("data-gsap");
+                el.removeAttribute("data-reveal");
+              });
+              gsap.set(children, { clearProps: "all" });
+            },
             scrollTrigger: {
               trigger: card,
               start: "top 85%",
@@ -258,7 +276,7 @@ export function ExperienceTimeline({ experiences }: ExperienceTimelineProps) {
       <Container>
         <div className="mx-auto max-w-5xl">
           {/* Heading */}
-          <div ref={headingRef} className="mb-20 text-center">
+          <div ref={headingRef} data-gsap className="mb-20 text-center">
             <span className="text-xs font-semibold uppercase tracking-[0.2em] text-primary-500">
               Career
             </span>
@@ -377,6 +395,7 @@ export function ExperienceTimeline({ experiences }: ExperienceTimelineProps) {
                     <div className="absolute left-5 top-5 z-10 -translate-x-1/2 sm:left-1/2">
                       <div
                         ref={setNodeRef(i)}
+                        data-gsap
                         className={`timeline-node h-10 w-10 shrink-0 rounded-full transition-all duration-500 ${
                           isCurrent
                             ? "glass-heavy text-primary-600 ring-2 ring-primary-400 pulse-glow shadow-lg shadow-primary-500/20"
@@ -409,6 +428,7 @@ export function ExperienceTimeline({ experiences }: ExperienceTimelineProps) {
                     >
                       <div
                         ref={setCardRef(i)}
+                        data-gsap
                         onMouseMove={handleMouseMove}
                         className={`glass-spotlight relative rounded-2xl transition-all duration-500 ease-out group-hover/lift:-translate-y-1 ${
                           isCurrent

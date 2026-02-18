@@ -70,7 +70,7 @@ export function BlogArticle({ post, relatedPosts, siteUrl }: BlogArticleProps) {
       {/* Cover image hero */}
       {post.coverImage && (
         <Container>
-          <div ref={heroRef} className="pt-28">
+          <div ref={heroRef} data-gsap className="pt-28">
             <div className="overflow-hidden rounded-3xl">
               <Image
                 src={post.coverImage}
@@ -90,6 +90,7 @@ export function BlogArticle({ post, relatedPosts, siteUrl }: BlogArticleProps) {
       <Container>
         <div
           ref={headerRef}
+          data-gsap
           className={post.coverImage ? "pt-10" : "pt-32"}
         >
           {/* Category pills */}
@@ -165,7 +166,7 @@ export function BlogArticle({ post, relatedPosts, siteUrl }: BlogArticleProps) {
 
       {/* Article body + TOC sidebar */}
       <Container>
-        <div ref={bodyRef} className="pt-10 lg:flex lg:gap-10">
+        <div ref={bodyRef} data-gsap className="pt-10 lg:flex lg:gap-10">
           {/* Main content */}
           <div className="min-w-0 flex-1">
             <div

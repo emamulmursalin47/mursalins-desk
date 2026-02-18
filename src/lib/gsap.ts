@@ -20,6 +20,20 @@ export const OFFSET_X = 24;
 export const SPRING_EASE = "back.out(1.4)";
 export const SPRING_DURATION = 0.5;
 
+// ─── Progressive enhancement helpers ─────────────────────────────
+
+/** Remove data-gsap / data-animate so the CSS visibility:hidden rule no longer applies */
+function revealElements(els: Element | NodeListOf<Element> | Element[]) {
+  const list = "length" in els ? els : [els];
+  for (let i = 0; i < list.length; i++) {
+    const el = list[i];
+    if (el) {
+      el.removeAttribute("data-gsap");
+      el.removeAttribute("data-animate");
+    }
+  }
+}
+
 // ─── Reusable animation functions ────────────────────────────────
 
 interface AnimOptions {
@@ -53,7 +67,7 @@ export function createStaggerFadeUp(
   if (children.length === 0) return;
 
   return gsap.from(children, {
-    opacity: 0,
+    autoAlpha: 0,
     y,
     duration,
     stagger,
@@ -61,7 +75,8 @@ export function createStaggerFadeUp(
     delay,
     immediateRender: true,
     onComplete() {
-      gsap.set(children, { clearProps: "transform,opacity" });
+      revealElements(children);
+      gsap.set(children, { clearProps: "all" });
     },
     ...(scrollTrigger
       ? {
@@ -92,14 +107,15 @@ export function createFadeUp(
   } = options ?? {};
 
   return gsap.from(element, {
-    opacity: 0,
+    autoAlpha: 0,
     y,
     duration,
     ease,
     delay,
     immediateRender: true,
     onComplete() {
-      gsap.set(element, { clearProps: "transform,opacity" });
+      revealElements(element);
+      gsap.set(element, { clearProps: "all" });
     },
     ...(scrollTrigger
       ? {
@@ -128,13 +144,14 @@ export function createFadeLeft(
   } = options ?? {};
 
   return gsap.from(element, {
-    opacity: 0,
+    autoAlpha: 0,
     x: -OFFSET_X,
     duration,
     ease,
     immediateRender: true,
     onComplete() {
-      gsap.set(element, { clearProps: "transform,opacity" });
+      revealElements(element);
+      gsap.set(element, { clearProps: "all" });
     },
     ...(scrollTrigger
       ? {
@@ -163,13 +180,14 @@ export function createFadeRight(
   } = options ?? {};
 
   return gsap.from(element, {
-    opacity: 0,
+    autoAlpha: 0,
     x: OFFSET_X,
     duration,
     ease,
     immediateRender: true,
     onComplete() {
-      gsap.set(element, { clearProps: "transform,opacity" });
+      revealElements(element);
+      gsap.set(element, { clearProps: "all" });
     },
     ...(scrollTrigger
       ? {
@@ -194,12 +212,13 @@ export function createFadeIn(
   const { duration = 0.5, delay = 0, scrollTrigger = true } = options ?? {};
 
   return gsap.from(element, {
-    opacity: 0,
+    autoAlpha: 0,
     duration,
     delay,
     immediateRender: true,
     onComplete() {
-      gsap.set(element, { clearProps: "opacity" });
+      revealElements(element);
+      gsap.set(element, { clearProps: "all" });
     },
     ...(scrollTrigger
       ? {

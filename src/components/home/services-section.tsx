@@ -35,7 +35,7 @@ export function ServicesSection({ categories }: ServicesSectionProps) {
       <div className="pointer-events-none absolute right-0 top-0 h-80 w-80 rounded-full bg-accent-100/30 blur-3xl" />
 
       <Container>
-        <div ref={headingRef} className="relative mb-12 text-center">
+        <div ref={headingRef} data-gsap className="relative mb-12 text-center">
           <h2 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
             Service Packages
           </h2>
@@ -53,7 +53,7 @@ export function ServicesSection({ categories }: ServicesSectionProps) {
           ))}
         </div>
 
-        <div ref={ctaRef} className="mt-10 text-center">
+        <div ref={ctaRef} data-gsap className="mt-10 text-center">
           <Link
             href="/pricing"
             className="inline-flex items-center justify-center gap-2 rounded-xl bg-accent-500 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-accent-500/20 transition-all duration-300 ease-out hover:-translate-y-0.5 hover:bg-accent-600 hover:shadow-xl"
