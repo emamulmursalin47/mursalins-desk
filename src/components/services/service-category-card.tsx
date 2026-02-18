@@ -78,19 +78,25 @@ export function ServiceCategoryCard({ group }: { group: ServiceCategory }) {
     <div className="group/lift" data-animate>
       <article className="glass-card group relative flex h-full flex-col rounded-2xl border border-transparent transition-[transform,box-shadow] duration-300 ease-out group-hover/lift:-translate-y-1 group-hover/lift:shadow-xl group-hover/lift:shadow-primary-500/8">
         <div className="flex flex-1 flex-col p-6">
-          {/* Header: title + price badge */}
-          <div className="flex items-start justify-between gap-3">
-            <div>
-              <h3 className="text-lg font-semibold leading-snug text-foreground">
-                {group.categoryLabel}
-              </h3>
-            </div>
-            {lowestPrice !== null && (
-              <span className="shrink-0 rounded-lg bg-primary-50 px-2.5 py-1 text-xs font-bold tabular-nums text-primary-700">
-                From ${lowestPrice.toLocaleString()}
+          {/* Header */}
+          <p className="text-xs font-semibold uppercase tracking-wider text-primary-500">
+            {tierLabels}
+          </p>
+          <h3 className="mt-1.5 text-lg font-bold leading-snug text-foreground">
+            {group.categoryLabel}
+          </h3>
+
+          {/* Price — hero element */}
+          {lowestPrice !== null && (
+            <div className="mt-4 flex items-baseline gap-1.5">
+              <span className="text-3xl font-extrabold tabular-nums text-foreground">
+                ${lowestPrice.toLocaleString()}
               </span>
-            )}
-          </div>
+              <span className="text-sm font-medium text-muted-foreground">
+                / starting
+              </span>
+            </div>
+          )}
 
           {/* Description from starter tier */}
           {starter?.description && (
@@ -99,11 +105,6 @@ export function ServiceCategoryCard({ group }: { group: ServiceCategory }) {
             </p>
           )}
 
-          {/* Tier labels */}
-          <p className="mt-4 text-xs font-medium text-muted-foreground/70">
-            {group.tiers.length} packages: {tierLabels}
-          </p>
-
           {/* Divider */}
           <div className="my-5 h-px bg-border/50" />
 
@@ -111,7 +112,7 @@ export function ServiceCategoryCard({ group }: { group: ServiceCategory }) {
           <div className="mt-auto">
             <Link
               ref={btnRef}
-              href={`/pricing#${group.category}`}
+              href="/services"
               className="relative flex w-full items-center justify-center gap-2 overflow-hidden rounded-xl border border-primary-500/20 px-4 py-2.5 text-sm font-semibold text-primary-600 transition-colors duration-200 hover:border-primary-500/40 hover:text-white"
               onMouseEnter={handleMouseEnter}
               onMouseLeave={handleMouseLeave}
@@ -125,7 +126,7 @@ export function ServiceCategoryCard({ group }: { group: ServiceCategory }) {
                   transform: "translate(-50%, -50%) scale(0)",
                 }}
               />
-              <span className="relative z-10">View Packages</span>
+              <span className="relative z-10">Explore Services</span>
               <svg
                 className="relative z-10"
                 width="14"

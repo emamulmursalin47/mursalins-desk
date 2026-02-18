@@ -196,8 +196,9 @@ export function HeroSection({
               className="max-w-lg text-lg leading-relaxed text-muted-foreground"
               data-animate
             >
-              Full-stack developer specializing in modern web applications, SaaS
-              platforms, and e-commerce solutions for startups and businesses.
+              Software engineer from Bangladesh specializing in modern web
+              applications, SaaS platforms, and e-commerce solutions for
+              startups and businesses worldwide.
             </p>
 
             {/* Inline stats */}
@@ -252,7 +253,7 @@ export function HeroSection({
               >
                 <Image
                   src="/hero.png"
-                  alt="Mursalin"
+                  alt="Md. Emamul Mursalin"
                   fill
                   priority
                   sizes="(max-width: 640px) 336px, 400px"

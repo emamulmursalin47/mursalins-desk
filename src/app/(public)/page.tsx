@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import {
   getProjects,
   getServices,
@@ -11,6 +12,7 @@ import {
   getFAQs,
 } from "@/lib/api";
 import { groupServicesByCategory } from "@/lib/services";
+import { siteConfig } from "@/config/seo";
 import { HeroSection } from "@/components/home/hero-section";
 
 import { FeaturedProjects } from "@/components/home/featured-projects";
@@ -23,6 +25,46 @@ import { BlogPreview } from "@/components/home/blog-preview";
 import { BookCallSection } from "@/components/home/book-call-section";
 import { NewsletterContact } from "@/components/home/newsletter-contact";
 import { FAQSection } from "@/components/home/faq-section";
+
+export const metadata: Metadata = {
+  title: "Mursalin's Desk — Full-Stack Developer & SaaS Engineer",
+  description:
+    "Hire Md. Emamul Mursalin — a full-stack software engineer from Bangladesh building scalable web apps, SaaS platforms, and e-commerce solutions with Next.js, React & Node.js.",
+  keywords: [
+    ...siteConfig.keywords,
+    "hire full-stack developer",
+    "freelance web developer Bangladesh",
+    "custom web application development",
+  ],
+  alternates: {
+    canonical: siteConfig.url,
+  },
+  openGraph: {
+    title: "Mursalin's Desk — Full-Stack Developer & SaaS Engineer",
+    description:
+      "Hire Md. Emamul Mursalin — a full-stack software engineer building scalable web apps, SaaS platforms, and e-commerce solutions.",
+    url: siteConfig.url,
+    siteName: siteConfig.name,
+    images: [
+      {
+        url: siteConfig.ogImage,
+        width: 1200,
+        height: 630,
+        alt: "Mursalin's Desk — Full-Stack Developer",
+      },
+    ],
+    locale: "en_US",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Mursalin's Desk — Full-Stack Developer & SaaS Engineer",
+    description:
+      "Hire Md. Emamul Mursalin — a full-stack software engineer building scalable web apps, SaaS platforms, and e-commerce solutions.",
+    images: [siteConfig.ogImage],
+    creator: siteConfig.creator.twitter,
+  },
+};
 
 export default async function Home() {
   const [

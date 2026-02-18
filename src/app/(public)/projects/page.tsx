@@ -4,7 +4,7 @@ import { ProjectsHero } from "@/components/projects/projects-hero";
 import { ProjectsGrid } from "@/components/projects/projects-grid";
 
 export const metadata: Metadata = {
-  title: "Projects | Mursalin",
+  title: "Projects",
   description:
     "Browse my portfolio of completed projects and ongoing work — built with modern technology and thoughtful design.",
 };

@@ -6,7 +6,7 @@ import { ClientJourney } from "@/components/contact/client-journey";
 import { ContactTabs } from "@/components/contact/contact-tabs";
 
 export const metadata: Metadata = {
-  title: "Contact | Mursalin's Desk",
+  title: "Contact",
   description:
     "Get in touch — let's discuss your next project or book a free consultation call.",
 };

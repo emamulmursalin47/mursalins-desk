@@ -4,7 +4,7 @@ import { ProductsHero } from "@/components/products/products-hero";
 import { ProductsGrid } from "@/components/products/products-grid";
 
 export const metadata: Metadata = {
-  title: "Store | Mursalin",
+  title: "Store",
   description:
     "Browse ready-made digital products — templates, components, and tools built with modern technology and production-ready quality.",
 };

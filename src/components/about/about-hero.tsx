@@ -63,7 +63,7 @@ export function AboutHero() {
               <div className="glass-frame glass-shine relative h-full w-full overflow-hidden rounded-3xl px-2 pt-2">
                 <Image
                   src="/hero.png"
-                  alt="Mursalin"
+                  alt="Md. Emamul Mursalin"
                   fill
                   priority
                   sizes="(max-width: 640px) 336px, 400px"
@@ -86,14 +86,14 @@ export function AboutHero() {
               className="text-5xl font-bold tracking-tight text-foreground lg:text-6xl"
               data-animate
             >
-              Mursalin
+              Md. Emamul Mursalin
             </h1>
 
             <p
               className="text-lg font-medium text-muted-foreground"
               data-animate
             >
-              Full-Stack Developer &amp; Digital Craftsman
+              Software Engineer from Bangladesh
             </p>
 
             <p

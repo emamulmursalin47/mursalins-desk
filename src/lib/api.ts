@@ -101,6 +101,18 @@ export function getServices() {
   });
 }
 
+/** Resolve a single service by slug — uses the cached getServices() list */
+export async function getServiceBySlug(
+  slug: string,
+): Promise<Service | null> {
+  try {
+    const services = await getServices();
+    return services.find((s) => s.slug === slug) ?? null;
+  } catch {
+    return null;
+  }
+}
+
 export function getProjects(page = 1, limit = 6) {
   return fetcher<PaginatedResult<Project>>(
     `/projects?page=${page}&limit=${limit}`,

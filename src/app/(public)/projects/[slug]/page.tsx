@@ -3,9 +3,16 @@ import type { Metadata } from "next";
 import { getProjectBySlug, getProjects } from "@/lib/api";
 import type { Project } from "@/types/api";
 import { ProjectDetailView } from "@/components/projects/project-detail-view";
+import { ProjectJsonLd, BreadcrumbJsonLd } from "@/components/seo/json-ld";
+import { siteConfig } from "@/config/seo";
 
 interface PageProps {
   params: Promise<{ slug: string }>;
+}
+
+export async function generateStaticParams() {
+  const result = await getProjects(1, 100).catch(() => null);
+  return (result?.data ?? []).map((p) => ({ slug: p.slug }));
 }
 
 export async function generateMetadata({
@@ -25,7 +32,11 @@ export async function generateMetadata({
     openGraph: {
       title: project.title,
       description: project.description || "",
+      url: `${siteConfig.url}/projects/${slug}`,
       images: project.featuredImage ? [{ url: project.featuredImage }] : [],
+    },
+    alternates: {
+      canonical: `${siteConfig.url}/projects/${slug}`,
     },
   };
 }
@@ -55,6 +66,16 @@ export default async function ProjectDetailPage({ params }: PageProps) {
   }
 
   return (
-    <ProjectDetailView project={project} relatedProjects={relatedProjects} />
+    <>
+      <BreadcrumbJsonLd
+        items={[
+          { name: "Home", url: siteConfig.url },
+          { name: "Projects", url: `${siteConfig.url}/projects` },
+          { name: project.title, url: `${siteConfig.url}/projects/${project.slug}` },
+        ]}
+      />
+      <ProjectJsonLd project={project} />
+      <ProjectDetailView project={project} relatedProjects={relatedProjects} />
+    </>
   );
 }

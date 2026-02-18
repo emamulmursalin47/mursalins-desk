@@ -3,9 +3,16 @@ import type { Metadata } from "next";
 import { getProductBySlug, getProducts, getProductReviews } from "@/lib/api";
 import type { Product, Review } from "@/types/api";
 import { ProductDetailView } from "@/components/products/product-detail-view";
+import { ProductJsonLd, BreadcrumbJsonLd } from "@/components/seo/json-ld";
+import { siteConfig } from "@/config/seo";
 
 interface PageProps {
   params: Promise<{ slug: string }>;
+}
+
+export async function generateStaticParams() {
+  const result = await getProducts(1, 100).catch(() => null);
+  return (result?.data ?? []).map((p) => ({ slug: p.slug }));
 }
 
 export async function generateMetadata({
@@ -25,7 +32,11 @@ export async function generateMetadata({
     openGraph: {
       title: product.name,
       description: product.description || "",
+      url: `${siteConfig.url}/store/${slug}`,
       images: product.thumbnailUrl ? [{ url: product.thumbnailUrl }] : [],
+    },
+    alternates: {
+      canonical: `${siteConfig.url}/store/${slug}`,
     },
   };
 }
@@ -55,10 +66,20 @@ export default async function ProductDetailPage({ params }: PageProps) {
   }
 
   return (
-    <ProductDetailView
-      product={product}
-      relatedProducts={relatedProducts}
-      reviews={reviews}
-    />
+    <>
+      <BreadcrumbJsonLd
+        items={[
+          { name: "Home", url: siteConfig.url },
+          { name: "Store", url: `${siteConfig.url}/store` },
+          { name: product.name, url: `${siteConfig.url}/store/${product.slug}` },
+        ]}
+      />
+      <ProductJsonLd product={product} reviews={reviews} />
+      <ProductDetailView
+        product={product}
+        relatedProducts={relatedProducts}
+        reviews={reviews}
+      />
+    </>
   );
 }

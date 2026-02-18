@@ -4,7 +4,7 @@ import { AppointmentHero } from "@/components/appointments/appointment-hero";
 import { BookingForm } from "@/components/appointments/booking-form";
 
 export const metadata: Metadata = {
-  title: "Book a Call | Mursalin's Desk",
+  title: "Book a Call",
   description:
     "Schedule a free consultation call to discuss your project goals and timeline.",
 };

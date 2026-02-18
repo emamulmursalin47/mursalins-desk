@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 export const siteConfig = {
   name: "Mursalin's Desk",
   description:
-    "Personal portfolio and creative studio of Mursalin — full-stack developer, designer, and maker. Explore projects, blog posts, and digital products.",
+    "Portfolio of Md. Emamul Mursalin — software engineer from Bangladesh specializing in full-stack web development, SaaS platforms, and e-commerce solutions. Explore projects, services, and digital products.",
   url: process.env.NEXT_PUBLIC_SITE_URL ?? "https://mursalinsdesk.com",
   ogImage: `${process.env.NEXT_PUBLIC_SITE_URL ?? "https://mursalinsdesk.com"}/logo.png`,
   links: {
@@ -13,20 +13,22 @@ export const siteConfig = {
     whatsapp: "https://wa.me/8801738753102",
   },
   creator: {
-    name: "Mursalin",
+    name: "Md. Emamul Mursalin",
     twitter: "@mursalinsdesk",
   },
   keywords: [
-    "Mursalin",
+    "Md. Emamul Mursalin",
     "Mursalin's Desk",
+    "Software Engineer",
     "Full-Stack Developer",
-    "Web Developer",
+    "Web Developer Bangladesh",
+    "Hire Software Engineer",
+    "Web Development Services",
+    "SaaS Development",
+    "E-Commerce Developer",
     "Portfolio",
-    "Designer",
-    "Digital Products",
-    "Blog",
-    "Projects",
-    "Creative Studio",
+    "Next.js Developer",
+    "React Developer",
   ],
 } as const;
 
