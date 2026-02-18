@@ -26,7 +26,7 @@ export function ChatPanel() {
       className="fixed bottom-24 right-6 z-50 h-120 w-95 max-sm:bottom-20 max-sm:right-4 max-sm:w-[calc(100vw-2rem)]"
     >
       <div className="iridescent-border h-full w-full rounded-2xl">
-        <div className="relative z-[1] flex h-full w-full flex-col overflow-hidden rounded-2xl glass-shine bg-[oklch(0.98_0.003_265/0.55)] border border-white/50 shadow-[0_8px_40px_-8px_oklch(0.50_0.01_260/0.15),inset_0_1px_0_0_oklch(1_0_0/0.4)] backdrop-blur-[48px] backdrop-saturate-[1.8]">
+        <div className="relative z-[1] flex h-full w-full flex-col overflow-hidden rounded-2xl glass-heavy glass-shine bg-[oklch(0.98_0.003_265/0.93)]">
           <ChatHeader />
           <ChatMessages />
           <ChatInput />
