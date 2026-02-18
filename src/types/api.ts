@@ -70,6 +70,8 @@ export interface Experience {
   updatedAt: string;
 }
 
+export type ServiceTier = "STARTER" | "PROFESSIONAL" | "ENTERPRISE";
+
 export interface Service {
   id: string;
   title: string;
@@ -82,6 +84,24 @@ export interface Service {
   sortOrder: number;
   createdAt: string;
   updatedAt: string;
+  // Package tier fields
+  category: string | null;
+  categoryLabel: string | null;
+  tier: ServiceTier;
+  tagline: string | null;
+  deliverables: string[];
+  exclusions: string[];
+  duration: string | null;
+  idealFor: string | null;
+  isPopular: boolean;
+  ctaLabel: string | null;
+  ctaUrl: string | null;
+}
+
+export interface ServiceCategory {
+  category: string;
+  categoryLabel: string;
+  tiers: Service[];
 }
 
 export interface ProjectImage {

@@ -10,6 +10,7 @@ import {
   getPosts,
   getFAQs,
 } from "@/lib/api";
+import { groupServicesByCategory } from "@/lib/services";
 import { HeroSection } from "@/components/home/hero-section";
 
 import { FeaturedProjects } from "@/components/home/featured-projects";
@@ -52,6 +53,7 @@ export default async function Home() {
   const products = productsResult?.data ?? [];
   const testimonials = testimonialsResult?.data ?? [];
   const posts = postsResult?.data ?? [];
+  const serviceCategories = groupServicesByCategory(services);
 
   return (
     <>
@@ -68,8 +70,10 @@ export default async function Home() {
       {/* 2. Featured Projects */}
       {projects.length > 0 && <FeaturedProjects projects={projects} />}
 
-      {/* 4. Services */}
-      {services.length > 0 && <ServicesSection services={services} />}
+      {/* 4. Service Packages */}
+      {serviceCategories.length > 0 && (
+        <ServicesSection categories={serviceCategories} />
+      )}
 
       {/* 5. Experience Timeline */}
       {experiences.length > 0 && (

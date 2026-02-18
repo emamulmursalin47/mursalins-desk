@@ -9,6 +9,7 @@ const navLinks = [
   { href: "/", label: "Home" },
   { href: "/about", label: "About" },
   { href: "/projects", label: "Projects" },
+  { href: "/pricing", label: "Pricing" },
   { href: "/blog", label: "Blog" },
   { href: "/store", label: "Store" },
   { href: "/contact", label: "Contact" },
@@ -16,9 +17,11 @@ const navLinks = [
 
 const services = [
   "Web Development",
-  "Digital Products",
-  "Consulting",
+  "Mobile Apps",
+  "API & Backend",
+  "E-Commerce",
   "UI/UX Design",
+  "Consulting",
 ];
 
 export function Footer() {
