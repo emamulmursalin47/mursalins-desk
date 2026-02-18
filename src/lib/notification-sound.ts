@@ -4,10 +4,12 @@
  *
  * Browsers block audio before a valid user gesture (click, tap, keydown).
  * Call `primeAudio()` on user interaction to unlock playback.
+ * If a sound is requested while locked, it queues and plays on first gesture.
  * NOTE: scroll is NOT a valid gesture — only click/touch/key work.
  */
 
 let audioCtx: AudioContext | null = null;
+let pendingSound = false;
 
 function getAudioContext(): AudioContext | null {
   if (typeof window === "undefined") return null;
@@ -28,12 +30,27 @@ export function isAudioReady(): boolean {
 
 /**
  * Call on user gestures (click/touch/keydown) to unlock the AudioContext.
- * Safe to call multiple times — no-ops if already running.
+ * If a sound was queued while locked, plays it immediately after unlock.
  */
 export function primeAudio() {
   const ctx = getAudioContext();
-  if (!ctx || ctx.state === "running") return;
-  ctx.resume().catch(() => {});
+  if (!ctx || ctx.state === "running") {
+    // Already running — play pending sound if any
+    if (pendingSound && ctx?.state === "running") {
+      pendingSound = false;
+      scheduleTones(ctx);
+    }
+    return;
+  }
+  ctx
+    .resume()
+    .then(() => {
+      if (ctx.state === "running" && pendingSound) {
+        pendingSound = false;
+        scheduleTones(ctx);
+      }
+    })
+    .catch(() => {});
 }
 
 /** Play the two-tone chime */
@@ -69,25 +86,18 @@ function scheduleTones(ctx: AudioContext) {
 
 /**
  * Play notification sound if audio is unlocked.
- * If suspended, attempts resume first (may fail without prior user gesture).
+ * If suspended, queues the sound — it will play on next user gesture via primeAudio().
  */
 export function playNotificationSound() {
   const ctx = getAudioContext();
   if (!ctx) return;
 
   if (ctx.state === "running") {
+    pendingSound = false;
     scheduleTones(ctx);
     return;
   }
 
-  if (ctx.state === "suspended") {
-    ctx
-      .resume()
-      .then(() => {
-        if (ctx.state === "running") {
-          scheduleTones(ctx);
-        }
-      })
-      .catch(() => {});
-  }
+  // Audio locked — queue the sound for when primeAudio() unlocks it
+  pendingSound = true;
 }
