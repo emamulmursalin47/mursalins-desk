@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { adminPost, adminPatch, revalidateCache } from "@/lib/admin-api";
 import { FormField } from "@/components/dashboard/form-field";
+import { ImageUpload } from "@/components/dashboard/image-upload";
 import { useToast } from "@/components/dashboard/toast-context";
 import type { AdminProduct } from "@/types/admin";
 
@@ -112,7 +113,14 @@ export function ProductForm({ product }: ProductFormProps) {
           {/* URLs */}
           <div className="glass rounded-2xl p-5 space-y-4">
             <h3 className="text-sm font-semibold text-foreground">URLs</h3>
-            <FormField label="Thumbnail URL" value={thumbnailUrl} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setThumbnailUrl(e.target.value)} placeholder="https://..." />
+            <ImageUpload
+              label="Thumbnail"
+              value={thumbnailUrl}
+              onChange={setThumbnailUrl}
+              folder="products"
+              aspectClass="aspect-video"
+              hint="Recommended: 800×450px"
+            />
             <FormField label="Preview URL" value={previewUrl} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPreviewUrl(e.target.value)} placeholder="https://..." />
             <FormField label="Download URL" value={downloadUrl} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setDownloadUrl(e.target.value)} placeholder="https://..." />
           </div>

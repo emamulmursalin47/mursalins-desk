@@ -2,8 +2,9 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { adminPost, adminPatch, adminDelete, revalidateCache } from "@/lib/admin-api";
+import { adminPost, adminPatch, adminDelete, adminUpload, revalidateCache } from "@/lib/admin-api";
 import { FormField } from "@/components/dashboard/form-field";
+import { ImageUpload } from "@/components/dashboard/image-upload";
 import { useToast } from "@/components/dashboard/toast-context";
 import type { AdminProject } from "@/types/admin";
 
@@ -104,7 +105,7 @@ export function ProjectForm({ project }: ProjectFormProps) {
 
   // Images
   const [images, setImages] = useState(project?.images ?? []);
-  const [newImageUrl, setNewImageUrl] = useState("");
+  const [uploadingGallery, setUploadingGallery] = useState(false);
 
   const [saving, setSaving] = useState(false);
   const [autoSlug, setAutoSlug] = useState(!isEdit);
@@ -190,17 +191,28 @@ export function ProjectForm({ project }: ProjectFormProps) {
     }
   }
 
-  async function addImage() {
-    if (!isEdit || !newImageUrl) return;
+  async function addGalleryImage(file: File) {
+    if (!isEdit) return;
+    if (!file.type.startsWith("image/")) {
+      toast("Please select an image file", "error");
+      return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      toast("File must be under 10 MB", "error");
+      return;
+    }
+    setUploadingGallery(true);
     try {
+      const uploaded = await adminUpload<{ url: string }>(file, "projects");
       const result = await adminPost(`/projects/${project!.id}/images`, {
-        url: newImageUrl,
+        url: uploaded.url,
       });
       setImages([...images, result as (typeof images)[0]]);
-      setNewImageUrl("");
       toast("Image added", "success");
     } catch {
       toast("Failed to add image", "error");
+    } finally {
+      setUploadingGallery(false);
     }
   }
 
@@ -505,13 +517,13 @@ export function ProjectForm({ project }: ProjectFormProps) {
           {/* URLs */}
           <div className="glass rounded-2xl p-5 space-y-4">
             <h3 className="text-sm font-semibold text-foreground">URLs</h3>
-            <FormField
+            <ImageUpload
               label="Featured Image"
               value={featuredImage}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                setFeaturedImage(e.target.value)
-              }
-              placeholder="https://..."
+              onChange={setFeaturedImage}
+              folder="projects"
+              aspectClass="aspect-video"
+              hint="Recommended: 1200×630px"
             />
             <FormField
               label="Live URL"
@@ -708,21 +720,30 @@ export function ProjectForm({ project }: ProjectFormProps) {
                   ))}
                 </div>
               )}
-              <div className="flex gap-2">
+              <label
+                className={`flex cursor-pointer items-center justify-center gap-2 rounded-xl border-2 border-dashed border-foreground/10 px-4 py-3 text-sm transition-colors hover:border-primary-400/40 ${uploadingGallery ? "pointer-events-none opacity-60" : ""}`}
+              >
                 <input
-                  value={newImageUrl}
-                  onChange={(e) => setNewImageUrl(e.target.value)}
-                  className={`flex-1 ${inputCls}`}
-                  placeholder="Image URL..."
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) addGalleryImage(file);
+                    e.target.value = "";
+                  }}
                 />
-                <button
-                  type="button"
-                  onClick={addImage}
-                  className="btn-glass-secondary rounded-xl px-4 py-2 text-sm font-medium"
-                >
-                  Add
-                </button>
-              </div>
+                {uploadingGallery ? (
+                  <span className="text-muted-foreground">Uploading...</span>
+                ) : (
+                  <>
+                    <svg className="h-5 w-5 text-muted-foreground/50" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+                    </svg>
+                    <span className="font-medium text-muted-foreground">Upload image</span>
+                  </>
+                )}
+              </label>
             </div>
           )}
         </div>

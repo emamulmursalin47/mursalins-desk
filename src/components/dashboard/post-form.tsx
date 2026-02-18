@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { adminGet, adminPost, adminPatch, revalidateCache } from "@/lib/admin-api";
 import { FormField } from "@/components/dashboard/form-field";
+import { ImageUpload } from "@/components/dashboard/image-upload";
 import { TipTapEditor } from "@/components/dashboard/tiptap-editor";
 import { useToast } from "@/components/dashboard/toast-context";
 import type { AdminPost } from "@/types/admin";
@@ -330,11 +331,13 @@ export function PostForm({ post }: PostFormProps) {
               <option value="ARCHIVED">Archived</option>
             </FormField>
 
-            <FormField
+            <ImageUpload
               label="Cover Image"
               value={coverImage}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setCoverImage(e.target.value)}
-              placeholder="https://..."
+              onChange={setCoverImage}
+              folder="blog"
+              aspectClass="aspect-video"
+              hint="Recommended: 1200×630px"
             />
 
             <label className="flex items-center gap-2 text-sm text-foreground">
