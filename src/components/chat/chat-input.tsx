@@ -8,7 +8,7 @@ const inputClass =
 
 export function ChatInput() {
   const [value, setValue] = useState("");
-  const { sendMessage, isConnected } = useChat();
+  const { sendMessage, isConnected, visitorInfo } = useChat();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const handleSend = useCallback(() => {
@@ -44,7 +44,13 @@ export function ChatInput() {
           value={value}
           onChange={handleInput}
           onKeyDown={handleKeyDown}
-          placeholder={isConnected ? "Type a message..." : "Connecting..."}
+          placeholder={
+            isConnected
+              ? visitorInfo
+                ? `Type a message, ${visitorInfo.name}...`
+                : "Type a message..."
+              : "Connecting..."
+          }
           disabled={!isConnected}
           rows={1}
           className={`${inputClass} min-h-[40px] max-h-[100px]`}

@@ -4,15 +4,17 @@ import { useEffect, useRef } from "react";
 import { useChat } from "@/contexts/chat-context";
 import { ChatMessageBubble } from "./chat-message-bubble";
 import { ChatTypingIndicator } from "./chat-typing-indicator";
+import { ChatLeadForm } from "./chat-lead-form";
 
 export function ChatMessages() {
-  const { messages, isTyping, typingSender } = useChat();
+  const { messages, isTyping, typingSender, showLeadForm, leadFormMode } =
+    useChat();
   const bottomRef = useRef<HTMLDivElement>(null);
 
   // Auto-scroll on new messages
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, isTyping]);
+  }, [messages, isTyping, showLeadForm]);
 
   return (
     <div className="flex-1 space-y-3 overflow-y-auto py-3">
@@ -27,6 +29,8 @@ export function ChatMessages() {
       {messages.map((msg) => (
         <ChatMessageBubble key={msg.id} message={msg} />
       ))}
+
+      {showLeadForm && leadFormMode === "soft" && <ChatLeadForm />}
 
       {isTyping && <ChatTypingIndicator sender={typingSender} />}
 

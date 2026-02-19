@@ -3,7 +3,7 @@
 import { useChat } from "@/contexts/chat-context";
 
 export function ChatHeader() {
-  const { closeChat, requestHuman, resetChat, mode, isConnected } = useChat();
+  const { closeChat, requestHuman, resetChat, mode, isConnected, setShowHistory, conversationHistory } = useChat();
 
   return (
     <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
@@ -52,7 +52,7 @@ export function ChatHeader() {
           <button
             onClick={requestHuman}
             className="flex items-center gap-1.5 rounded-lg bg-blue-500/15 px-2.5 py-1.5 text-[11px] font-medium text-blue-400 transition-colors hover:bg-blue-500/25"
-            aria-label="Talk to a human"
+            aria-label="Talk to Mursalin"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -62,7 +62,29 @@ export function ChatHeader() {
             >
               <path d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM12.735 14c.618 0 1.093-.561.872-1.139a6.002 6.002 0 0 0-11.215 0c-.22.578.254 1.139.872 1.139h9.47Z" />
             </svg>
-            Talk to Human
+            Talk to Mursalin
+          </button>
+        )}
+        {/* History */}
+        {conversationHistory.length > 0 && (
+          <button
+            onClick={() => setShowHistory(true)}
+            className="flex h-7 w-7 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-white/10 hover:text-foreground"
+            aria-label="Conversation history"
+            title="History"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 16 16"
+              fill="currentColor"
+              className="h-3.5 w-3.5"
+            >
+              <path
+                fillRule="evenodd"
+                d="M1 8a7 7 0 1 1 14 0A7 7 0 0 1 1 8Zm7.75-4.25a.75.75 0 0 0-1.5 0V8c0 .414.336.75.75.75h3.25a.75.75 0 0 0 0-1.5h-2.5v-3.5Z"
+                clipRule="evenodd"
+              />
+            </svg>
           </button>
         )}
         {/* New Chat — reset session */}

@@ -3,7 +3,7 @@
 import { useEffect, useState, useRef, useCallback } from "react";
 import { useGSAP } from "@gsap/react";
 import { gsap, DURATION_ENTRY, STAGGER_DELAY, GSAP_EASE } from "@/lib/gsap";
-import { adminGet, adminPatch } from "@/lib/admin-api";
+import { adminGet, adminPatch, adminDelete } from "@/lib/admin-api";
 import { PageHeader } from "@/components/dashboard/page-header";
 import { LoadingState } from "@/components/dashboard/loading-state";
 import { Pagination } from "@/components/dashboard/pagination";
@@ -108,6 +108,34 @@ export default function ChatDashboardPage() {
     async (sessionId: string) => {
       try {
         await adminPatch(`/chat/conversations/${sessionId}/close`, {});
+        setSelected(null);
+        fetchData();
+      } catch {
+        // silently handle
+      }
+    },
+    [fetchData],
+  );
+
+  const archiveConversation = useCallback(
+    async (sessionId: string) => {
+      try {
+        await adminPatch(`/chat/conversations/${sessionId}/archive`, {});
+        setSelected(null);
+        fetchData();
+      } catch {
+        // silently handle
+      }
+    },
+    [fetchData],
+  );
+
+  const deleteConversation = useCallback(
+    async (sessionId: string) => {
+      if (!window.confirm("Delete this conversation? This cannot be undone."))
+        return;
+      try {
+        await adminDelete(`/chat/conversations/${sessionId}`);
         setSelected(null);
         fetchData();
       } catch {
@@ -279,14 +307,30 @@ export default function ChatDashboardPage() {
                       </span>
                     </p>
                   </div>
-                  {selected.status === "ACTIVE" && (
+                  <div className="flex items-center gap-1.5">
+                    {selected.status === "ACTIVE" && (
+                      <button
+                        onClick={() => closeConversation(selected.sessionId)}
+                        className="rounded-lg px-3 py-1.5 text-xs font-medium text-destructive transition-colors hover:bg-destructive/10"
+                      >
+                        Close
+                      </button>
+                    )}
+                    {selected.status !== "ARCHIVED" && (
+                      <button
+                        onClick={() => archiveConversation(selected.sessionId)}
+                        className="rounded-lg px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-white/10 hover:text-foreground"
+                      >
+                        Archive
+                      </button>
+                    )}
                     <button
-                      onClick={() => closeConversation(selected.sessionId)}
-                      className="rounded-lg px-3 py-1.5 text-xs font-medium text-destructive transition-colors hover:bg-destructive/10"
+                      onClick={() => deleteConversation(selected.sessionId)}
+                      className="rounded-lg px-3 py-1.5 text-xs font-medium text-destructive/70 transition-colors hover:bg-destructive/10 hover:text-destructive"
                     >
-                      Close
+                      Delete
                     </button>
-                  )}
+                  </div>
                 </div>
 
                 {/* Messages */}
