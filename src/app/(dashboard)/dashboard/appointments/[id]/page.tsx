@@ -12,6 +12,9 @@ import { LoadingState } from "@/components/dashboard/loading-state";
 import { useToast } from "@/components/dashboard/toast-context";
 import type { AdminAppointment } from "@/types/admin";
 
+const inputClass =
+  "glass-subtle w-full rounded-xl px-4 py-2.5 text-sm text-foreground outline-none focus:ring-2 focus:ring-primary-500/30 placeholder:text-muted-foreground";
+
 export default function AppointmentDetailPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
@@ -19,8 +22,14 @@ export default function AppointmentDetailPage() {
   const [appt, setAppt] = useState<AdminAppointment | null>(null);
   const [loading, setLoading] = useState(true);
   const [showCancel, setShowCancel] = useState(false);
+  const [showEdit, setShowEdit] = useState(false);
   const [cancelReason, setCancelReason] = useState("");
   const [updating, setUpdating] = useState(false);
+  const [editDate, setEditDate] = useState("");
+  const [editDuration, setEditDuration] = useState(30);
+  const [editTopic, setEditTopic] = useState("");
+  const [editNotes, setEditNotes] = useState("");
+  const [editMeetingUrl, setEditMeetingUrl] = useState("");
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -71,6 +80,40 @@ export default function AppointmentDetailPage() {
       toast("Appointment cancelled", "success");
     } catch {
       toast("Failed to cancel", "error");
+    } finally {
+      setUpdating(false);
+    }
+  }
+
+  function openEdit() {
+    if (!appt) return;
+    const d = new Date(appt.date);
+    const local = new Date(d.getTime() - d.getTimezoneOffset() * 60000)
+      .toISOString()
+      .slice(0, 16);
+    setEditDate(local);
+    setEditDuration(appt.duration);
+    setEditTopic(appt.topic ?? "");
+    setEditNotes(appt.notes ?? "");
+    setEditMeetingUrl(appt.meetingUrl ?? "");
+    setShowEdit(true);
+  }
+
+  async function handleEdit() {
+    setUpdating(true);
+    try {
+      const updated = await adminPatch<AdminAppointment>(`/appointments/${id}`, {
+        date: new Date(editDate).toISOString(),
+        duration: editDuration,
+        topic: editTopic.trim() || undefined,
+        notes: editNotes.trim() || undefined,
+        meetingUrl: editMeetingUrl.trim() || undefined,
+      });
+      setAppt(updated);
+      setShowEdit(false);
+      toast("Appointment updated", "success");
+    } catch {
+      toast("Failed to update", "error");
     } finally {
       setUpdating(false);
     }
@@ -205,6 +248,14 @@ export default function AppointmentDetailPage() {
             Actions
           </h3>
           <div className="flex flex-col gap-2">
+            {appt.status !== "CANCELLED" && appt.status !== "COMPLETED" && (
+              <button
+                onClick={openEdit}
+                className="btn-glass-secondary w-full rounded-xl px-4 py-2 text-sm font-medium"
+              >
+                Edit Details
+              </button>
+            )}
             {appt.status === "PENDING" && (
               <button
                 onClick={() => updateStatus("CONFIRMED")}
@@ -267,6 +318,93 @@ export default function AppointmentDetailPage() {
           className="glass-subtle w-full resize-none rounded-xl px-4 py-2.5 text-sm text-foreground outline-none focus:ring-2 focus:ring-primary-500/30 placeholder:text-muted-foreground"
           placeholder="Reason for cancellation..."
         />
+      </Modal>
+
+      {/* Edit Modal */}
+      <Modal
+        open={showEdit}
+        onClose={() => setShowEdit(false)}
+        title="Edit Appointment"
+        footer={
+          <>
+            <button
+              onClick={() => setShowEdit(false)}
+              className="btn-glass-secondary rounded-xl px-4 py-2 text-sm font-medium"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleEdit}
+              disabled={updating || !editDate}
+              className="btn-glass-primary rounded-xl px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
+            >
+              {updating ? "Saving..." : "Save Changes"}
+            </button>
+          </>
+        }
+      >
+        <div className="space-y-3">
+          <div>
+            <label className="mb-1 block text-xs font-medium text-muted-foreground">
+              Date & Time
+            </label>
+            <input
+              type="datetime-local"
+              value={editDate}
+              onChange={(e) => setEditDate(e.target.value)}
+              className={inputClass}
+            />
+          </div>
+          <div>
+            <label className="mb-1 block text-xs font-medium text-muted-foreground">
+              Duration (minutes)
+            </label>
+            <input
+              type="number"
+              min={15}
+              step={15}
+              value={editDuration}
+              onChange={(e) => setEditDuration(Number(e.target.value))}
+              className={inputClass}
+            />
+          </div>
+          <div>
+            <label className="mb-1 block text-xs font-medium text-muted-foreground">
+              Topic
+            </label>
+            <input
+              type="text"
+              value={editTopic}
+              onChange={(e) => setEditTopic(e.target.value)}
+              placeholder="e.g. Consultation"
+              className={inputClass}
+            />
+          </div>
+          <div>
+            <label className="mb-1 block text-xs font-medium text-muted-foreground">
+              Meeting URL
+            </label>
+            <input
+              type="url"
+              value={editMeetingUrl}
+              onChange={(e) => setEditMeetingUrl(e.target.value)}
+              placeholder="https://meet.google.com/..."
+              className={inputClass}
+            />
+          </div>
+          <div>
+            <label className="mb-1 block text-xs font-medium text-muted-foreground">
+              Notes
+            </label>
+            <textarea
+              value={editNotes}
+              onChange={(e) => setEditNotes(e.target.value)}
+              rows={3}
+              className={`${inputClass} resize-none`}
+              placeholder="Additional notes..."
+            />
+          </div>
+        </div>
       </Modal>
     </div>
   );
