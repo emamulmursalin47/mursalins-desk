@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef, useCallback } from "react";
+import { useEffect, useState, useRef, useCallback, useMemo } from "react";
 import Link from "next/link";
 import { useGSAP } from "@gsap/react";
 import { gsap, DURATION_ENTRY, STAGGER_DELAY, GSAP_EASE } from "@/lib/gsap";
@@ -12,6 +12,7 @@ import { Pagination } from "@/components/dashboard/pagination";
 import { ConfirmDialog } from "@/components/dashboard/confirm-dialog";
 import { Modal } from "@/components/dashboard/modal";
 import { LoadingState } from "@/components/dashboard/loading-state";
+import { FilterTabs } from "@/components/dashboard/filter-tabs";
 import { useToast } from "@/components/dashboard/toast-context";
 import type { AdminPost } from "@/types/admin";
 import type { PaginatedResult } from "@/types/api";
@@ -87,11 +88,16 @@ export default function BlogPage() {
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      const statusParam = tab !== "All" ? `&status=${tab}` : "";
-      const result = await adminGet<PaginatedResult<AdminPost>>(`/blog/posts?page=${page}&limit=20${statusParam}`);
+      const result = await adminGet<PaginatedResult<AdminPost>>(`/blog/posts?page=${page}&limit=20`);
       setData(result);
     } catch { /* */ } finally { setLoading(false); }
-  }, [page, tab]);
+  }, [page]);
+
+  const filtered = useMemo(() => {
+    const items = data?.data ?? [];
+    if (tab === "All") return items;
+    return items.filter((r) => r.status === tab);
+  }, [data, tab]);
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
@@ -121,17 +127,11 @@ export default function BlogPage() {
         <Link href="/dashboard/blog/new" className="btn-glass-primary rounded-xl px-5 py-2 text-sm font-semibold text-white">New Post</Link>
       } />
 
-      <div data-animate className="mb-6 flex flex-wrap gap-1">
-        {TABS.map((t) => (
-          <button key={t} onClick={() => { setTab(t); setPage(1); }} className={`rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${tab === t ? "glass text-primary-600" : "text-muted-foreground hover:text-foreground"}`}>
-            {t === "All" ? "All" : t}
-          </button>
-        ))}
-      </div>
+      <FilterTabs tabs={TABS} active={tab} onChange={(t) => { setTab(t); setPage(1); }} />
 
       {loading ? <LoadingState /> : (
         <div data-animate>
-          <DataTable columns={columns} data={data?.data ?? []} keyExtractor={(r) => r.id} onRowClick={(r) => openEdit(r)} emptyMessage="No posts found." />
+          <DataTable columns={columns} data={filtered} keyExtractor={(r) => r.id} onRowClick={(r) => openEdit(r)} emptyMessage="No posts found." />
           {data?.meta && <Pagination page={data.meta.page} totalPages={data.meta.totalPages} onPageChange={setPage} />}
         </div>
       )}

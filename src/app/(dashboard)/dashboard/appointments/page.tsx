@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef, useCallback } from "react";
+import { useEffect, useState, useRef, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { useGSAP } from "@gsap/react";
 import { gsap, DURATION_ENTRY, STAGGER_DELAY, GSAP_EASE } from "@/lib/gsap";
@@ -10,6 +10,7 @@ import { DataTable, type Column } from "@/components/dashboard/data-table";
 import { StatusBadge } from "@/components/dashboard/status-badge";
 import { Pagination } from "@/components/dashboard/pagination";
 import { LoadingState } from "@/components/dashboard/loading-state";
+import { FilterTabs } from "@/components/dashboard/filter-tabs";
 import type { AdminAppointment } from "@/types/admin";
 import type { PaginatedResult } from "@/types/api";
 
@@ -61,9 +62,8 @@ export default function AppointmentsPage() {
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      const statusParam = tab !== "All" ? `&status=${tab}` : "";
       const result = await adminGet<PaginatedResult<AdminAppointment>>(
-        `/appointments?page=${page}&limit=20${statusParam}`,
+        `/appointments?page=${page}&limit=20`,
       );
       setData(result);
     } catch {
@@ -71,7 +71,13 @@ export default function AppointmentsPage() {
     } finally {
       setLoading(false);
     }
-  }, [page, tab]);
+  }, [page]);
+
+  const filtered = useMemo(() => {
+    const items = data?.data ?? [];
+    if (tab === "All") return items;
+    return items.filter((r) => r.status === tab);
+  }, [data, tab]);
 
   useEffect(() => {
     fetchData();
@@ -101,21 +107,7 @@ export default function AppointmentsPage() {
         description="Manage booked appointments."
       />
 
-      <div data-animate className="mb-6 flex flex-wrap gap-1">
-        {TABS.map((t) => (
-          <button
-            key={t}
-            onClick={() => { setTab(t); setPage(1); }}
-            className={`rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
-              tab === t
-                ? "glass text-primary-600"
-                : "text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            {t === "All" ? "All" : t.replace(/_/g, " ")}
-          </button>
-        ))}
-      </div>
+      <FilterTabs tabs={TABS} active={tab} onChange={(t) => { setTab(t); setPage(1); }} />
 
       {loading ? (
         <LoadingState />
@@ -123,7 +115,7 @@ export default function AppointmentsPage() {
         <div data-animate>
           <DataTable
             columns={columns}
-            data={data?.data ?? []}
+            data={filtered}
             keyExtractor={(r) => r.id}
             onRowClick={(r) => router.push(`/dashboard/appointments/${r.id}`)}
             emptyMessage="No appointments found."

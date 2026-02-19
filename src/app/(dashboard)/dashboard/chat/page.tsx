@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef, useCallback } from "react";
+import { useEffect, useState, useRef, useCallback, useMemo } from "react";
 import { useGSAP } from "@gsap/react";
 import { gsap, DURATION_ENTRY, STAGGER_DELAY, GSAP_EASE } from "@/lib/gsap";
 import { adminGet, adminPatch, adminDelete } from "@/lib/admin-api";
@@ -8,10 +8,10 @@ import { PageHeader } from "@/components/dashboard/page-header";
 import { LoadingState } from "@/components/dashboard/loading-state";
 import { Pagination } from "@/components/dashboard/pagination";
 import { StatusBadge } from "@/components/dashboard/status-badge";
+import { FilterTabs } from "@/components/dashboard/filter-tabs";
 import type {
   ChatConversation,
   ChatMessageRecord,
-  ChatStatus,
 } from "@/types/admin";
 import type { PaginatedResult } from "@/types/api";
 
@@ -73,10 +73,8 @@ export default function ChatDashboardPage() {
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      const statusParam =
-        tab !== "All" ? `&status=${tab as ChatStatus}` : "";
       const result = await adminGet<PaginatedResult<ChatConversation>>(
-        `/chat/conversations?page=${page}&limit=20${statusParam}`,
+        `/chat/conversations?page=${page}&limit=20`,
       );
       setData(result);
     } catch {
@@ -84,7 +82,13 @@ export default function ChatDashboardPage() {
     } finally {
       setLoading(false);
     }
-  }, [page, tab]);
+  }, [page]);
+
+  const filtered = useMemo(() => {
+    const items = data?.data ?? [];
+    if (tab === "All") return items;
+    return items.filter((r) => r.status === tab);
+  }, [data, tab]);
 
   useEffect(() => {
     fetchData();
@@ -171,26 +175,7 @@ export default function ChatDashboardPage() {
         description="View and manage visitor chat conversations."
       />
 
-      {/* Filter Tabs */}
-      <div data-animate className="mb-6 flex flex-wrap gap-1">
-        {TABS.map((t) => (
-          <button
-            key={t}
-            onClick={() => {
-              setTab(t);
-              setPage(1);
-              setSelected(null);
-            }}
-            className={`rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
-              tab === t
-                ? "glass text-primary-600"
-                : "text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            {t === "All" ? "All" : t.replace(/_/g, " ")}
-          </button>
-        ))}
-      </div>
+      <FilterTabs tabs={TABS} active={tab} onChange={(t) => { setTab(t); setPage(1); setSelected(null); }} />
 
       {loading ? (
         <LoadingState />
@@ -199,12 +184,12 @@ export default function ChatDashboardPage() {
           {/* Conversations List */}
           <div className="lg:col-span-1">
             <div className="space-y-2">
-              {(data?.data ?? []).length === 0 && (
+              {filtered.length === 0 && (
                 <p className="py-8 text-center text-sm text-muted-foreground">
                   No conversations found.
                 </p>
               )}
-              {(data?.data ?? []).map((convo) => (
+              {filtered.map((convo) => (
                 <button
                   key={convo.id}
                   onClick={() => selectConversation(convo.sessionId)}

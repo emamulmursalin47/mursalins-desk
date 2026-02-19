@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef, useCallback } from "react";
+import { useEffect, useState, useRef, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { useGSAP } from "@gsap/react";
 import { gsap, DURATION_ENTRY, STAGGER_DELAY, GSAP_EASE } from "@/lib/gsap";
@@ -12,6 +12,7 @@ import { StatusBadge } from "@/components/dashboard/status-badge";
 import { Pagination } from "@/components/dashboard/pagination";
 import { ConfirmDialog } from "@/components/dashboard/confirm-dialog";
 import { LoadingState } from "@/components/dashboard/loading-state";
+import { FilterTabs } from "@/components/dashboard/filter-tabs";
 import { SearchInput } from "@/components/dashboard/search-input";
 import { DateRangePicker } from "@/components/dashboard/date-range-picker";
 import { useToast } from "@/components/dashboard/toast-context";
@@ -60,7 +61,6 @@ export default function OrdersPage() {
       const params = new URLSearchParams();
       params.set("page", String(page));
       params.set("limit", "20");
-      if (tab !== "All") params.set("status", tab);
       if (search) params.set("search", search);
       if (dateFrom) params.set("dateFrom", dateFrom);
       if (dateTo) params.set("dateTo", dateTo);
@@ -69,8 +69,14 @@ export default function OrdersPage() {
       for (const [k, v] of Object.entries(extra)) params.set(k, v);
       return params.toString();
     },
-    [page, tab, search, dateFrom, dateTo, sortBy, sortOrder],
+    [page, search, dateFrom, dateTo, sortBy, sortOrder],
   );
+
+  const filtered = useMemo(() => {
+    const items = data?.data ?? [];
+    if (tab === "All") return items;
+    return items.filter((r) => r.status === tab);
+  }, [data, tab]);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -414,25 +420,7 @@ export default function OrdersPage() {
         </select>
       </div>
 
-      {/* Tabs */}
-      <div data-animate className="mb-6 flex flex-wrap gap-1">
-        {TABS.map((t) => (
-          <button
-            key={t}
-            onClick={() => {
-              setTab(t);
-              setPage(1);
-            }}
-            className={`rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
-              tab === t
-                ? "glass text-primary-600"
-                : "text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            {t === "All" ? "All" : t}
-          </button>
-        ))}
-      </div>
+      <FilterTabs tabs={TABS} active={tab} onChange={(t) => { setTab(t); setPage(1); }} />
 
       {/* Table */}
       {loading ? (
@@ -441,7 +429,7 @@ export default function OrdersPage() {
         <div data-animate>
           <DataTable
             columns={columns}
-            data={data?.data ?? []}
+            data={filtered}
             keyExtractor={(r) => r.id}
             onRowClick={(r) => router.push(`/dashboard/orders/${r.id}`)}
             emptyMessage="No orders found."
