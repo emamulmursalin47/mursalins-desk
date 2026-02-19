@@ -47,10 +47,10 @@ export function ChatHeader() {
                 !isConnected
                   ? "bg-muted-foreground"
                   : mode === "LIVE"
-                    ? "bg-blue-400"
-                    : isAdminOnline
-                      ? "bg-emerald-400"
+                    ? isAdminOnline
+                      ? "bg-blue-400"
                       : "bg-amber-400"
+                    : "bg-emerald-400"
               }`}
             />
             <span className="text-[11px] text-muted-foreground">
@@ -60,9 +60,7 @@ export function ChatHeader() {
                   ? isAdminOnline
                     ? "Connected to Mursalin"
                     : "Mursalin will reply soon"
-                  : isAdminOnline
-                    ? "Mursalin is available"
-                    : "Typically replies within 2 hours"}
+                  : "Online"}
             </span>
           </div>
         </div>
@@ -73,7 +71,7 @@ export function ChatHeader() {
           <button
             onClick={requestHuman}
             className="flex items-center gap-1.5 whitespace-nowrap rounded-lg bg-blue-500/15 px-2.5 py-1.5 text-[11px] font-medium text-blue-400 transition-colors hover:bg-blue-500/25"
-            aria-label={isAdminOnline ? "Talk to Mursalin" : "Leave a message"}
+            aria-label="Talk Live"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -83,7 +81,7 @@ export function ChatHeader() {
             >
               <path d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM12.735 14c.618 0 1.093-.561.872-1.139a6.002 6.002 0 0 0-11.215 0c-.22.578.254 1.139.872 1.139h9.47Z" />
             </svg>
-            <span className="truncate">{isAdminOnline ? "Talk to Mursalin" : "Message"}</span>
+            Talk Live
           </button>
         )}
 

@@ -453,14 +453,12 @@ export function ChatProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const requestHuman = useCallback(() => {
-    if (visitorInfo) {
+    if (isAdminOnline && visitorInfo) {
+      // Admin is online + we have info → escalate immediately
       sendVisitorInfo(visitorInfo.name, visitorInfo.email);
-      sendMessage(
-        isAdminOnline
-          ? "I'd like to talk to a human please"
-          : "I'd like to leave a message for Mursalin",
-      );
+      sendMessage("I'd like to talk to a human please");
     } else {
+      // Either admin offline or no visitor info → show lead form
       setLeadFormMode("escalation");
       setShowLeadForm(true);
     }
@@ -485,11 +483,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
         if (question?.trim()) {
           sendMessage(question.trim());
         }
-        sendMessage(
-          isAdminOnline
-            ? "I'd like to talk to a human please"
-            : "I'd like to leave a message for Mursalin",
-        );
+        sendMessage("I'd like to talk to a human please");
       } else {
         // Soft mode: inject a local thank-you message
         setMessages((prev) => [
@@ -503,7 +497,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
         ]);
       }
     },
-    [leadFormMode, sendVisitorInfo, sendMessage, isAdminOnline],
+    [leadFormMode, sendVisitorInfo, sendMessage],
   );
 
   const dismissLeadForm = useCallback(() => {
