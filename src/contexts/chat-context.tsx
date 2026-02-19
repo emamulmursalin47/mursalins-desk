@@ -50,6 +50,7 @@ interface ChatContextValue {
   typingSender: string | null;
   mode: "AI" | "LIVE";
   hasUnread: boolean;
+  isAdminOnline: boolean;
   notification: NotificationPopup | null;
   dismissNotification: () => void;
   visitorInfo: { name: string; email: string } | null;
@@ -127,6 +128,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     ConversationHistoryEntry[]
   >([]);
   const [showHistory, setShowHistory] = useState(false);
+  const [isAdminOnline, setIsAdminOnline] = useState(false);
 
   const hasStarted = useRef(false);
   const isOpenRef = useRef(isOpen);
@@ -356,6 +358,10 @@ export function ChatProvider({ children }: { children: ReactNode }) {
       console.warn("Chat error:", data.message);
     });
 
+    socket.on("chat:admin_status", (data: { isOnline: boolean }) => {
+      setIsAdminOnline(data.isOnline);
+    });
+
     socket.connect();
 
     // Proactive greeting: start chat in background after 10s if visitor hasn't opened it
@@ -448,14 +454,17 @@ export function ChatProvider({ children }: { children: ReactNode }) {
 
   const requestHuman = useCallback(() => {
     if (visitorInfo) {
-      // Re-send info for this session, then escalate
       sendVisitorInfo(visitorInfo.name, visitorInfo.email);
-      sendMessage("I'd like to talk to a human please");
+      sendMessage(
+        isAdminOnline
+          ? "I'd like to talk to a human please"
+          : "I'd like to leave a message for Mursalin",
+      );
     } else {
       setLeadFormMode("escalation");
       setShowLeadForm(true);
     }
-  }, [visitorInfo, sendVisitorInfo, sendMessage]);
+  }, [visitorInfo, sendVisitorInfo, sendMessage, isAdminOnline]);
 
   const submitLeadForm = useCallback(
     (name: string, email: string, question?: string) => {
@@ -476,7 +485,11 @@ export function ChatProvider({ children }: { children: ReactNode }) {
         if (question?.trim()) {
           sendMessage(question.trim());
         }
-        sendMessage("I'd like to talk to a human please");
+        sendMessage(
+          isAdminOnline
+            ? "I'd like to talk to a human please"
+            : "I'd like to leave a message for Mursalin",
+        );
       } else {
         // Soft mode: inject a local thank-you message
         setMessages((prev) => [
@@ -490,7 +503,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
         ]);
       }
     },
-    [leadFormMode, sendVisitorInfo, sendMessage],
+    [leadFormMode, sendVisitorInfo, sendMessage, isAdminOnline],
   );
 
   const dismissLeadForm = useCallback(() => {
@@ -556,6 +569,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
         typingSender,
         mode,
         hasUnread,
+        isAdminOnline,
         notification,
         dismissNotification,
         visitorInfo,

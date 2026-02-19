@@ -12,7 +12,7 @@ const compactInputClass =
   "glass-subtle w-full rounded-lg px-3 py-1.5 text-xs text-foreground placeholder:text-muted-foreground outline-none ring-ring focus:ring-1 transition-shadow";
 
 export function ChatLeadForm() {
-  const { leadFormMode, submitLeadForm, dismissLeadForm, visitorInfo } =
+  const { leadFormMode, submitLeadForm, dismissLeadForm, visitorInfo, isAdminOnline } =
     useChat();
   const [name, setName] = useState(visitorInfo?.name ?? "");
   const [email, setEmail] = useState(visitorInfo?.email ?? "");
@@ -42,8 +42,9 @@ export function ChatLeadForm() {
       <div ref={formRef} className="flex justify-start px-4">
         <div className="max-w-[85%] rounded-2xl rounded-bl-sm glass-subtle px-3.5 py-3">
           <p className="mb-2.5 text-sm leading-relaxed text-foreground">
-            Mind sharing your name and email? This helps Mursalin follow up on
-            our conversation.
+            {isAdminOnline
+              ? "Mind sharing your name and email? This helps Mursalin follow up on our conversation."
+              : "Share your email so Mursalin can reply when he's back. He typically responds within 2 hours."}
           </p>
           <form onSubmit={handleSubmit} className="flex flex-col gap-2">
             <input
@@ -103,10 +104,12 @@ export function ChatLeadForm() {
             </svg>
           </div>
           <h3 className="text-sm font-semibold text-foreground">
-            Talk to Mursalin
+            {isAdminOnline ? "Talk to Mursalin" : "Leave a Message"}
           </h3>
           <p className="mt-1 text-xs text-muted-foreground">
-            Share your details so Mursalin can get back to you
+            {isAdminOnline
+              ? "Share your details so Mursalin can get back to you"
+              : "Mursalin is currently away but typically replies within 2 hours"}
           </p>
         </div>
 
@@ -156,7 +159,7 @@ export function ChatLeadForm() {
             type="submit"
             className="btn-glass-primary mt-1 w-full rounded-xl py-2.5 text-sm font-semibold text-white"
           >
-            Connect with Mursalin
+            {isAdminOnline ? "Connect with Mursalin" : "Send Message"}
           </button>
           <button
             type="button"

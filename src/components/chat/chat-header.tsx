@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import { useChat } from "@/contexts/chat-context";
 
 export function ChatHeader() {
-  const { closeChat, requestHuman, resetChat, mode, isConnected, setShowHistory } = useChat();
+  const { closeChat, requestHuman, resetChat, mode, isConnected, isAdminOnline, setShowHistory } = useChat();
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -55,8 +55,12 @@ export function ChatHeader() {
               {!isConnected
                 ? "Connecting..."
                 : mode === "LIVE"
-                  ? "Connected to Mursalin"
-                  : "Online"}
+                  ? isAdminOnline
+                    ? "Connected to Mursalin"
+                    : "Mursalin will reply soon"
+                  : isAdminOnline
+                    ? "Mursalin is available"
+                    : "Typically replies within 2 hours"}
             </span>
           </div>
         </div>
@@ -67,7 +71,7 @@ export function ChatHeader() {
           <button
             onClick={requestHuman}
             className="flex items-center gap-1.5 rounded-lg bg-blue-500/15 px-2.5 py-1.5 text-[11px] font-medium text-blue-400 transition-colors hover:bg-blue-500/25"
-            aria-label="Talk to Mursalin"
+            aria-label={isAdminOnline ? "Talk to Mursalin" : "Leave a Message"}
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -77,7 +81,7 @@ export function ChatHeader() {
             >
               <path d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM12.735 14c.618 0 1.093-.561.872-1.139a6.002 6.002 0 0 0-11.215 0c-.22.578.254 1.139.872 1.139h9.47Z" />
             </svg>
-            Talk to Mursalin
+            {isAdminOnline ? "Talk to Mursalin" : "Leave a Message"}
           </button>
         )}
 
