@@ -39,22 +39,27 @@ export function TestimonialForm({ testimonial }: TestimonialFormProps) {
 
     setSaving(true);
     try {
-      const body: Record<string, unknown> = {
-        name: name.trim(),
-        content: content.trim(),
-        rating,
-        role: role.trim() || undefined,
-        company: company.trim() || undefined,
-        avatarUrl: avatarUrl.trim() || undefined,
-        status,
-        isFeatured,
-      };
-
       if (isEdit) {
-        await adminPatch(`/testimonials/${testimonial.id}`, body);
+        await adminPatch(`/testimonials/${testimonial.id}`, {
+          name: name.trim(),
+          content: content.trim(),
+          rating,
+          role: role.trim() || undefined,
+          company: company.trim() || undefined,
+          avatarUrl: avatarUrl.trim() || undefined,
+          approved: status === "APPROVED",
+          featured: isFeatured,
+        });
         toast("Testimonial updated", "success");
       } else {
-        await adminPost("/testimonials", body);
+        await adminPost("/testimonials", {
+          name: name.trim(),
+          content: content.trim(),
+          rating,
+          role: role.trim() || undefined,
+          company: company.trim() || undefined,
+          avatarUrl: avatarUrl.trim() || undefined,
+        });
         toast("Testimonial created", "success");
       }
       await revalidateCache("testimonials");

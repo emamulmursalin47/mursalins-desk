@@ -66,10 +66,9 @@ export default function ProjectsPage() {
     try {
       await adminPatch(`/projects/${editItem.id}`, {
         title: editTitle.trim(),
-        slug: editSlug.trim(),
         description: editDescription.trim() || undefined,
         status: editStatus,
-        budget: editBudget.trim() || undefined,
+        budget: editBudget.trim() ? Number(editBudget) : undefined,
         startDate: editStartDate || undefined,
         endDate: editEndDate || undefined,
         liveUrl: editLiveUrl.trim() || undefined,
@@ -197,7 +196,7 @@ export default function ProjectsPage() {
             </div>
             <div>
               <label className="mb-1 block text-xs font-medium text-muted-foreground">Budget</label>
-              <input type="text" value={editBudget} onChange={(e) => setEditBudget(e.target.value)} className={inputClass} placeholder="e.g. $5,000" />
+              <input type="number" value={editBudget} onChange={(e) => setEditBudget(e.target.value)} className={inputClass} placeholder="5000" />
             </div>
           </div>
           <div className="grid grid-cols-2 gap-3">

@@ -59,7 +59,6 @@ export default function ProductsPage() {
     try {
       await adminPatch(`/products/${editItem.id}`, {
         name: editName.trim(),
-        slug: editSlug.trim(),
         type: editType,
         price: Number(editPrice),
         salePrice: editSalePrice ? Number(editSalePrice) : undefined,

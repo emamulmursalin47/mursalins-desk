@@ -65,7 +65,6 @@ export function ProductForm({ product }: ProductFormProps) {
 
     const body = {
       name,
-      slug,
       description: description || undefined,
       longDescription: longDescription || undefined,
       type,

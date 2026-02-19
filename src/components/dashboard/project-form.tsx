@@ -120,10 +120,9 @@ export function ProjectForm({ project }: ProjectFormProps) {
 
     const body = {
       title,
-      slug,
       description: description || undefined,
       status,
-      budget: budget || undefined,
+      budget: budget !== "" ? Number(budget) : undefined,
       startDate: startDate || undefined,
       endDate: endDate || undefined,
       liveUrl: liveUrl || undefined,
@@ -768,11 +767,12 @@ export function ProjectForm({ project }: ProjectFormProps) {
             </FormField>
             <FormField
               label="Budget"
+              type="number"
               value={budget}
               onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                 setBudget(e.target.value)
               }
-              placeholder="e.g. $5,000"
+              placeholder="5000"
             />
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <FormField

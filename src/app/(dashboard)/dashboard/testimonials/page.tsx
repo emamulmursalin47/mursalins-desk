@@ -74,8 +74,8 @@ export default function TestimonialsPage() {
         rating: editRating,
         role: editRole.trim() || undefined,
         company: editCompany.trim() || undefined,
-        status: editStatus,
-        isFeatured: editIsFeatured,
+        approved: editStatus === "APPROVED",
+        featured: editIsFeatured,
       });
       await revalidateCache("testimonials");
       toast("Testimonial updated", "success");
