@@ -29,7 +29,7 @@ export function ChatPanel() {
       ref={panelRef}
       className="fixed bottom-24 right-6 z-50 h-120 w-95 max-sm:bottom-20 max-sm:right-4 max-sm:w-[calc(100vw-2rem)]"
     >
-      <div className="relative flex h-full w-full flex-col overflow-hidden rounded-2xl glass-heavy glass-shine bg-background">
+      <div className="relative flex h-full w-full flex-col overflow-hidden rounded-2xl bg-background shadow-xl shadow-foreground/10 border border-foreground/10">
         <ChatHeader />
         <ChatMessages />
         <ChatInput />
