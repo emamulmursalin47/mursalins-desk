@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { adminPost, adminPatch, revalidateCache } from "@/lib/admin-api";
 import { useToast } from "@/components/dashboard/toast-context";
+import { ImageUpload } from "@/components/dashboard/image-upload";
 import type { AdminTestimonial, TestimonialStatus } from "@/types/admin";
 
 interface TestimonialFormProps {
@@ -168,18 +169,14 @@ export function TestimonialForm({ testimonial }: TestimonialFormProps) {
                 </div>
               </div>
 
-              <div>
-                <label className="mb-1.5 block text-xs font-medium text-muted-foreground">
-                  Avatar URL
-                </label>
-                <input
-                  type="url"
-                  value={avatarUrl}
-                  onChange={(e) => setAvatarUrl(e.target.value)}
-                  className="glass-subtle w-full rounded-xl px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary-500/30"
-                  placeholder="https://example.com/avatar.jpg"
-                />
-              </div>
+              <ImageUpload
+                value={avatarUrl}
+                onChange={setAvatarUrl}
+                folder="testimonials"
+                label="Avatar"
+                hint="Square image recommended"
+                aspectClass="aspect-square w-24"
+              />
             </div>
           </div>
         </div>
