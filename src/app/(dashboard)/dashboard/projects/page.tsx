@@ -101,8 +101,8 @@ export default function ProjectsPage() {
       key: "actions", label: "",
       render: (r) => (
         <div className="flex items-center gap-2">
-          <button onClick={(e) => { e.stopPropagation(); openEdit(r); }} className="text-xs font-medium text-primary-600 hover:text-primary-500">Edit</button>
-          <button onClick={(e) => { e.stopPropagation(); setDeleteId(r.id); }} className="text-xs font-medium text-destructive hover:text-destructive/80">Delete</button>
+          <button onClick={(e) => { e.stopPropagation(); openEdit(r); }} className="cursor-pointer text-xs font-medium text-primary-600 hover:text-primary-500">Edit</button>
+          <button onClick={(e) => { e.stopPropagation(); setDeleteId(r.id); }} className="cursor-pointer text-xs font-medium text-destructive hover:text-destructive/80">Delete</button>
         </div>
       ),
     },
