@@ -8,9 +8,10 @@ interface ModalProps {
   title: string;
   children: ReactNode;
   footer?: ReactNode;
+  size?: "md" | "lg" | "xl" | "2xl";
 }
 
-export function Modal({ open, onClose, title, children, footer }: ModalProps) {
+export function Modal({ open, onClose, title, children, footer, size = "lg" }: ModalProps) {
   const overlayRef = useRef<HTMLDivElement>(null);
   const dialogRef = useRef<HTMLDivElement>(null);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
@@ -83,7 +84,7 @@ export function Modal({ open, onClose, title, children, footer }: ModalProps) {
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
-        className="glass-heavy glass-shine w-full max-w-lg rounded-2xl p-6 shadow-2xl"
+        className={`glass-heavy glass-shine w-full rounded-2xl p-6 shadow-2xl ${{ md: "max-w-md", lg: "max-w-lg", xl: "max-w-xl", "2xl": "max-w-2xl" }[size]}`}
       >
         <div className="mb-4 flex items-center justify-between">
           <h3 id={titleId} className="text-lg font-semibold text-foreground">
