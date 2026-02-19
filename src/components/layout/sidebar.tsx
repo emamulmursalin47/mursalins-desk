@@ -18,6 +18,7 @@ const sidebarLinks = [
   { href: "/dashboard/appointments", label: "Appointments" },
   { href: "/dashboard/testimonials", label: "Testimonials" },
   { href: "/dashboard/contacts", label: "Contacts" },
+  { href: "/dashboard/newsletter", label: "Newsletter" },
   { href: "/dashboard/chat", label: "Chat" },
   { href: "/dashboard/analytics", label: "Analytics" },
   { href: "/dashboard/settings", label: "Settings" },

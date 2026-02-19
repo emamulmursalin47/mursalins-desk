@@ -1,12 +1,31 @@
 "use client";
 
-import { useRef } from "react";
+import { useRef, useState, useTransition } from "react";
 import { useGSAP } from "@gsap/react";
 import { createStaggerFadeUp } from "@/lib/gsap";
 import { Container } from "@/components/layout/container";
+import { subscribeNewsletter } from "@/app/(public)/newsletter/actions";
 
 export function NewsletterContact() {
   const gridRef = useRef<HTMLDivElement>(null);
+
+  /* Newsletter form state */
+  const [email, setEmail] = useState("");
+  const [pending, startTransition] = useTransition();
+  const [result, setResult] = useState<{
+    success: boolean;
+    message: string;
+  } | null>(null);
+
+  function handleSubscribe(e: React.FormEvent) {
+    e.preventDefault();
+    setResult(null);
+    startTransition(async () => {
+      const res = await subscribeNewsletter(email);
+      setResult({ success: res.success, message: res.message ?? "" });
+      if (res.success) setEmail("");
+    });
+  }
 
   useGSAP(() => {
     if (!gridRef.current) return;
@@ -32,21 +51,35 @@ export function NewsletterContact() {
 
           <form
             className="mt-6 flex flex-col gap-3 sm:flex-row"
-            onSubmit={(e) => e.preventDefault()}
+            onSubmit={handleSubscribe}
           >
             <input
               type="email"
               placeholder="your@email.com"
               required
-              className="glass-subtle flex-1 rounded-xl px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground outline-none ring-ring focus:ring-2"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              disabled={pending}
+              className="glass-subtle flex-1 rounded-xl px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground outline-none ring-ring focus:ring-2 disabled:opacity-50"
             />
             <button
               type="submit"
-              className="shrink-0 rounded-xl bg-primary-500 px-6 py-2.5 text-sm font-semibold text-white transition-all duration-300 ease-out hover:-translate-y-0.5 hover:bg-primary-600 hover:shadow-lg hover:shadow-primary-500/20"
+              disabled={pending}
+              className="shrink-0 rounded-xl bg-primary-500 px-6 py-2.5 text-sm font-semibold text-white transition-all duration-300 ease-out hover:-translate-y-0.5 hover:bg-primary-600 hover:shadow-lg hover:shadow-primary-500/20 disabled:opacity-50 disabled:hover:translate-y-0"
             >
-              Subscribe
+              {pending ? "Subscribing..." : "Subscribe"}
             </button>
           </form>
+
+          {result && (
+            <p
+              className={`mt-3 text-sm font-medium ${
+                result.success ? "text-green-500" : "text-red-400"
+              }`}
+            >
+              {result.message}
+            </p>
+          )}
         </div>
 
         {/* Quick Contact */}
