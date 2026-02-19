@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useRef, useCallback, useMemo } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useGSAP } from "@gsap/react";
 import { gsap, DURATION_ENTRY, STAGGER_DELAY, GSAP_EASE } from "@/lib/gsap";
@@ -17,12 +18,13 @@ import { useToast } from "@/components/dashboard/toast-context";
 import type { AdminPost } from "@/types/admin";
 import type { PaginatedResult } from "@/types/api";
 
-const TABS = ["All", "DRAFT", "PUBLISHED", "ARCHIVED"] as const;
+const TABS = ["All", "DRAFT", "PUBLISHED", "SCHEDULED", "ARCHIVED"] as const;
 
 const inputClass =
   "glass-subtle w-full rounded-xl px-4 py-2.5 text-sm text-foreground outline-none focus:ring-2 focus:ring-primary-500/30 placeholder:text-muted-foreground";
 
 export default function BlogPage() {
+  const router = useRouter();
   const { toast } = useToast();
   const [data, setData] = useState<PaginatedResult<AdminPost> | null>(null);
   const [loading, setLoading] = useState(true);
@@ -72,13 +74,23 @@ export default function BlogPage() {
   const columns: Column<AdminPost>[] = [
     { key: "title", label: "Title", sortable: true },
     { key: "author", label: "Author", render: (r) => r.author ? `${r.author.firstName ?? ""} ${r.author.lastName ?? ""}`.trim() || "—" : "—" },
-    { key: "status", label: "Status", render: (r) => <StatusBadge status={r.status} /> },
+    { key: "status", label: "Status", render: (r) => (
+      <div className="flex items-center gap-1.5">
+        <StatusBadge status={r.status} />
+        {r.status === "SCHEDULED" && r.publishedAt && (
+          <span className="text-[10px] text-muted-foreground">
+            {new Date(r.publishedAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+          </span>
+        )}
+      </div>
+    ) },
     { key: "createdAt", label: "Date", sortable: true, render: (r) => new Date(r.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) },
     {
       key: "actions", label: "",
       render: (r) => (
         <div className="flex items-center gap-2">
-          <button onClick={(e) => { e.stopPropagation(); openEdit(r); }} className="cursor-pointer text-xs font-medium text-primary-600 hover:text-primary-500">Edit</button>
+          <Link href={`/dashboard/blog/${r.id}/edit`} onClick={(e) => e.stopPropagation()} className="cursor-pointer text-xs font-medium text-primary-600 hover:text-primary-500">Edit</Link>
+          <button onClick={(e) => { e.stopPropagation(); openEdit(r); }} className="cursor-pointer text-xs font-medium text-muted-foreground hover:text-foreground">Quick</button>
           <button onClick={(e) => { e.stopPropagation(); setDeleteId(r.id); }} className="cursor-pointer text-xs font-medium text-destructive hover:text-destructive/80">Delete</button>
         </div>
       ),
@@ -131,7 +143,7 @@ export default function BlogPage() {
 
       {loading ? <LoadingState /> : (
         <div data-animate>
-          <DataTable columns={columns} data={filtered} keyExtractor={(r) => r.id} onRowClick={(r) => openEdit(r)} emptyMessage="No posts found." />
+          <DataTable columns={columns} data={filtered} keyExtractor={(r) => r.id} onRowClick={(r) => router.push(`/dashboard/blog/${r.id}/edit`)} emptyMessage="No posts found." />
           {data?.meta && <Pagination page={data.meta.page} totalPages={data.meta.totalPages} onPageChange={setPage} />}
         </div>
       )}
@@ -160,6 +172,7 @@ export default function BlogPage() {
             <select value={editStatus} onChange={(e) => setEditStatus(e.target.value)} className={inputClass}>
               <option value="DRAFT">Draft</option>
               <option value="PUBLISHED">Published</option>
+              <option value="SCHEDULED">Scheduled</option>
               <option value="ARCHIVED">Archived</option>
             </select>
           </div>

@@ -36,7 +36,7 @@ export type ProductType =
 
 export type LicenseType = "PERSONAL" | "COMMERCIAL" | "EXTENDED";
 
-export type PostStatus = "DRAFT" | "PUBLISHED" | "ARCHIVED";
+export type PostStatus = "DRAFT" | "PUBLISHED" | "SCHEDULED" | "ARCHIVED";
 
 /* ─── Models ─── */
 

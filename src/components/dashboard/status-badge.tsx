@@ -22,6 +22,7 @@ const STATUS_STYLES: Record<string, string> = {
   // Post statuses
   DRAFT: "bg-muted text-muted-foreground",
   PUBLISHED: "bg-success/10 text-success",
+  SCHEDULED: "bg-info/10 text-info",
 
   // Testimonial statuses
   APPROVED: "bg-success/10 text-success",
