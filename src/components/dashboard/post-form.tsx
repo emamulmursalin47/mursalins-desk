@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { adminGet, adminPost, adminPatch, revalidateCache } from "@/lib/admin-api";
 import { FormField } from "@/components/dashboard/form-field";
@@ -14,11 +14,17 @@ interface PostFormProps {
   post?: AdminPost;
 }
 
+const DRAFT_STORAGE_KEY = "blog_draft_autosave";
+
 function toSlug(str: string) {
   return str
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-|-$/g, "");
+}
+
+function stripHtml(html: string): string {
+  return html.replace(/<[^>]*>/g, " ").replace(/&\w+;/g, " ");
 }
 
 export function PostForm({ post }: PostFormProps) {
@@ -32,6 +38,7 @@ export function PostForm({ post }: PostFormProps) {
   const [excerpt, setExcerpt] = useState(post?.excerpt ?? "");
   const [coverImage, setCoverImage] = useState(post?.coverImage ?? "");
   const [status, setStatus] = useState<string>(post?.status ?? "DRAFT");
+  const [scheduledAt, setScheduledAt] = useState("");
   const [isFeatured, setIsFeatured] = useState(post?.isFeatured ?? false);
   const [metaTitle, setMetaTitle] = useState(post?.metaTitle ?? "");
   const [metaDescription, setMetaDescription] = useState(post?.metaDescription ?? "");
@@ -51,14 +58,106 @@ export function PostForm({ post }: PostFormProps) {
   const [saving, setSaving] = useState(false);
   const [autoSlug, setAutoSlug] = useState(!isEdit);
 
+  // Preview mode
+  const [previewMode, setPreviewMode] = useState(false);
+
+  // Auto-save
+  const [autoSaveStatus, setAutoSaveStatus] = useState<"idle" | "saving" | "saved">("idle");
+  const autoSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const lastSavedRef = useRef<string>("");
+
+  /* ── Word count & reading time ── */
+  const { wordCount, readTimeMin } = useMemo(() => {
+    const text = stripHtml(content);
+    const words = text.split(/\s+/).filter((w) => w.length > 0);
+    const count = words.length;
+    return {
+      wordCount: count,
+      readTimeMin: Math.max(1, Math.ceil(count / 200)),
+    };
+  }, [content]);
+
+  /* ── Load categories & tags ── */
   useEffect(() => {
     adminGet<Category[]>("/blog/categories").then(setCategories).catch(() => {});
     adminGet<Tag[]>("/blog/tags").then(setTags).catch(() => {});
   }, []);
 
+  /* ── Auto slug ── */
   useEffect(() => {
     if (autoSlug && title) setSlug(toSlug(title));
   }, [title, autoSlug]);
+
+  /* ── Load draft from localStorage (new post only) ── */
+  useEffect(() => {
+    if (isEdit) return;
+    try {
+      const raw = localStorage.getItem(DRAFT_STORAGE_KEY);
+      if (!raw) return;
+      const draft = JSON.parse(raw);
+      if (draft.title) setTitle(draft.title);
+      if (draft.slug) { setSlug(draft.slug); setAutoSlug(false); }
+      if (draft.content) setContent(draft.content);
+      if (draft.excerpt) setExcerpt(draft.excerpt);
+      if (draft.coverImage) setCoverImage(draft.coverImage);
+    } catch {
+      // Ignore
+    }
+  }, [isEdit]);
+
+  /* ── Auto-save logic ── */
+  const getFormSnapshot = useCallback(() => {
+    return JSON.stringify({ title, slug, content, excerpt, coverImage, status, isFeatured, metaTitle, metaDescription });
+  }, [title, slug, content, excerpt, coverImage, status, isFeatured, metaTitle, metaDescription]);
+
+  useEffect(() => {
+    // Only auto-save drafts
+    if (status !== "DRAFT") return;
+    // Don't auto-save empty posts
+    if (!title && !content) return;
+
+    const snapshot = getFormSnapshot();
+    if (snapshot === lastSavedRef.current) return;
+
+    if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);
+
+    autoSaveTimer.current = setTimeout(async () => {
+      if (isEdit && post) {
+        // Save to backend for existing posts
+        try {
+          setAutoSaveStatus("saving");
+          await adminPatch(`/blog/posts/${post.id}`, {
+            title, slug, content,
+            excerpt: excerpt || undefined,
+            coverImage: coverImage || undefined,
+            isFeatured,
+            readTimeMin,
+          });
+          lastSavedRef.current = snapshot;
+          setAutoSaveStatus("saved");
+          setTimeout(() => setAutoSaveStatus("idle"), 2000);
+        } catch {
+          setAutoSaveStatus("idle");
+        }
+      } else {
+        // Save to localStorage for new posts
+        try {
+          localStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify({
+            title, slug, content, excerpt, coverImage,
+          }));
+          lastSavedRef.current = snapshot;
+          setAutoSaveStatus("saved");
+          setTimeout(() => setAutoSaveStatus("idle"), 2000);
+        } catch {
+          // Storage unavailable
+        }
+      }
+    }, 5000);
+
+    return () => {
+      if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);
+    };
+  }, [getFormSnapshot, status, isEdit, post, title, slug, content, excerpt, coverImage, isFeatured, readTimeMin]);
 
   /* ── Focus keyword analysis ── */
   const focusKeyword = seoKeywords[0]?.toLowerCase() ?? "";
@@ -68,7 +167,6 @@ export function PostForm({ post }: PostFormProps) {
     const titleText = (metaTitle || title).toLowerCase();
     const descText = metaDescription.toLowerCase();
 
-    // Extract first paragraph text from HTML content
     const tempDiv = typeof document !== "undefined" ? document.createElement("div") : null;
     let firstParagraph = "";
     let headingsText = "";
@@ -94,20 +192,26 @@ export function PostForm({ post }: PostFormProps) {
     e.preventDefault();
     setSaving(true);
 
-    const body = {
+    const body: Record<string, unknown> = {
       title,
       slug,
       content,
       excerpt: excerpt || undefined,
       coverImage: coverImage || undefined,
-      status,
+      status: status === "SCHEDULED" ? "SCHEDULED" : status,
       isFeatured,
+      readTimeMin,
       metaTitle: metaTitle || undefined,
       metaDescription: metaDescription || undefined,
       seoKeywords: seoKeywords.length ? seoKeywords.join(", ") : undefined,
       categoryIds: categoryIds.length ? categoryIds : undefined,
       tagIds: tagIds.length ? tagIds : undefined,
     };
+
+    // Include scheduledAt for scheduled posts
+    if (status === "SCHEDULED" && scheduledAt) {
+      body.scheduledAt = new Date(scheduledAt).toISOString();
+    }
 
     try {
       if (isEdit) {
@@ -116,6 +220,8 @@ export function PostForm({ post }: PostFormProps) {
       } else {
         await adminPost("/blog/posts", body);
         toast("Post created", "success");
+        // Clear draft from localStorage
+        try { localStorage.removeItem(DRAFT_STORAGE_KEY); } catch { /* */ }
       }
       await revalidateCache("posts");
       router.push("/dashboard/blog");
@@ -157,12 +263,88 @@ export function PostForm({ post }: PostFormProps) {
               placeholder="post-slug"
               hint="Auto-generated from title"
             />
+
+            {/* Editor with Edit/Preview toggle */}
             <div>
-              <label className="mb-1 block text-sm font-medium text-foreground">
-                Content<span className="ml-0.5 text-destructive">*</span>
-              </label>
-              <TipTapEditor content={content} onChange={setContent} />
+              <div className="mb-1 flex items-center justify-between">
+                <label className="block text-sm font-medium text-foreground">
+                  Content<span className="ml-0.5 text-destructive">*</span>
+                </label>
+                <div className="flex items-center gap-1 rounded-lg border border-glass-border p-0.5">
+                  <button
+                    type="button"
+                    onClick={() => setPreviewMode(false)}
+                    className={`rounded-md px-3 py-1 text-xs font-medium transition-colors ${
+                      !previewMode
+                        ? "bg-primary-500/10 text-primary-600"
+                        : "text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    Edit
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setPreviewMode(true)}
+                    className={`rounded-md px-3 py-1 text-xs font-medium transition-colors ${
+                      previewMode
+                        ? "bg-primary-500/10 text-primary-600"
+                        : "text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    Preview
+                  </button>
+                </div>
+              </div>
+
+              {previewMode ? (
+                <div className="glass-subtle min-h-75 overflow-hidden rounded-xl px-4 py-3">
+                  {coverImage && (
+                    <img
+                      src={coverImage}
+                      alt={title}
+                      className="mb-4 w-full rounded-xl object-cover"
+                      style={{ maxHeight: 300 }}
+                    />
+                  )}
+                  {title && (
+                    <h1 className="mb-4 text-2xl font-bold text-foreground">
+                      {title}
+                    </h1>
+                  )}
+                  <div
+                    className="blog-prose"
+                    dangerouslySetInnerHTML={{ __html: content }}
+                  />
+                  {!content && (
+                    <p className="text-sm text-muted-foreground">
+                      Nothing to preview yet...
+                    </p>
+                  )}
+                </div>
+              ) : (
+                <TipTapEditor content={content} onChange={setContent} />
+              )}
+
+              {/* Word count & reading time */}
+              <div className="mt-1.5 flex items-center gap-3 text-xs text-muted-foreground">
+                <span>{wordCount.toLocaleString()} words</span>
+                <span className="h-3 w-px bg-glass-border" />
+                <span>{readTimeMin} min read</span>
+                {autoSaveStatus === "saving" && (
+                  <>
+                    <span className="h-3 w-px bg-glass-border" />
+                    <span className="animate-pulse text-primary-500">Saving...</span>
+                  </>
+                )}
+                {autoSaveStatus === "saved" && (
+                  <>
+                    <span className="h-3 w-px bg-glass-border" />
+                    <span className="text-success">Auto-saved</span>
+                  </>
+                )}
+              </div>
             </div>
+
             <FormField
               as="textarea"
               label="Excerpt"
@@ -328,8 +510,38 @@ export function PostForm({ post }: PostFormProps) {
             >
               <option value="DRAFT">Draft</option>
               <option value="PUBLISHED">Published</option>
+              <option value="SCHEDULED">Scheduled</option>
               <option value="ARCHIVED">Archived</option>
             </FormField>
+
+            {/* Scheduled date picker */}
+            {status === "SCHEDULED" && (
+              <div>
+                <label className="mb-1 block text-sm font-medium text-foreground">
+                  Publish Date & Time
+                </label>
+                <input
+                  type="datetime-local"
+                  value={scheduledAt}
+                  onChange={(e) => setScheduledAt(e.target.value)}
+                  min={new Date().toISOString().slice(0, 16)}
+                  required
+                  className="glass-subtle w-full rounded-xl px-4 py-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary-500/30"
+                />
+                {scheduledAt && (
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Will publish on{" "}
+                    {new Date(scheduledAt).toLocaleString("en-US", {
+                      month: "short",
+                      day: "numeric",
+                      year: "numeric",
+                      hour: "numeric",
+                      minute: "2-digit",
+                    })}
+                  </p>
+                )}
+              </div>
+            )}
 
             <ImageUpload
               label="Cover Image"
@@ -424,14 +636,16 @@ export function PostForm({ post }: PostFormProps) {
           {/* Submit */}
           <button
             type="submit"
-            disabled={saving || !title || !content}
+            disabled={saving || !title || !content || (status === "SCHEDULED" && !scheduledAt)}
             className="btn-glass-primary w-full rounded-xl px-6 py-2.5 text-sm font-semibold text-white disabled:opacity-50"
           >
             {saving
               ? "Saving..."
-              : isEdit
-                ? "Update Post"
-                : "Create Post"}
+              : status === "SCHEDULED"
+                ? "Schedule Post"
+                : isEdit
+                  ? "Update Post"
+                  : "Create Post"}
           </button>
         </div>
       </div>

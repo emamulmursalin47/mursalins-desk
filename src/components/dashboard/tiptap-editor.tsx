@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState, useRef, useCallback } from "react";
-import { useEditor, EditorContent } from "@tiptap/react";
+import { useEffect, useState, useRef, useCallback, useMemo } from "react";
+import { useEditor, EditorContent, type Editor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import LinkExtension from "@tiptap/extension-link";
 import ImageExtension from "@tiptap/extension-image";
@@ -12,11 +12,121 @@ import Highlight from "@tiptap/extension-highlight";
 import Color from "@tiptap/extension-color";
 import { TextStyle } from "@tiptap/extension-text-style";
 import Typography from "@tiptap/extension-typography";
+import { Table } from "@tiptap/extension-table";
+import TableRow from "@tiptap/extension-table-row";
+import TableCell from "@tiptap/extension-table-cell";
+import TableHeader from "@tiptap/extension-table-header";
+import CodeBlockLowlight from "@tiptap/extension-code-block-lowlight";
+import Youtube from "@tiptap/extension-youtube";
+import { common, createLowlight } from "lowlight";
+import { Extension } from "@tiptap/core";
+import { Plugin, PluginKey, NodeSelection } from "@tiptap/pm/state";
 import { adminUpload } from "@/lib/admin-api";
 
 /* ────────────────────────────────────────── */
-/* Types                                      */
+/* Constants                                   */
 /* ────────────────────────────────────────── */
+
+const lowlight = createLowlight(common);
+
+/* ── Drag Handle Extension ── */
+
+const dragHandleKey = new PluginKey("dragHandle");
+
+const DragHandle = Extension.create({
+  name: "dragHandle",
+  addProseMirrorPlugins() {
+    return [
+      new Plugin({
+        key: dragHandleKey,
+        view(view) {
+          const handle = document.createElement("div");
+          handle.className = "editor-drag-handle";
+          handle.draggable = true;
+          handle.contentEditable = "false";
+          handle.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="5" r="2"/><circle cx="15" cy="5" r="2"/><circle cx="9" cy="12" r="2"/><circle cx="15" cy="12" r="2"/><circle cx="9" cy="19" r="2"/><circle cx="15" cy="19" r="2"/></svg>`;
+
+          const wrapper = view.dom.parentElement;
+          if (wrapper) {
+            wrapper.style.position = "relative";
+            wrapper.appendChild(handle);
+          }
+
+          let hoveredNodePos: number | null = null;
+          let rafId: number | null = null;
+
+          function updateHandle(event: MouseEvent) {
+            if (rafId !== null) return;
+            rafId = requestAnimationFrame(() => {
+              rafId = null;
+              updateHandleCore(event);
+            });
+          }
+
+          function updateHandleCore(event: MouseEvent) {
+            const coords = { left: event.clientX, top: event.clientY };
+            const posInfo = view.posAtCoords(coords);
+            if (!posInfo) {
+              hide();
+              return;
+            }
+            const $pos = view.state.doc.resolve(posInfo.pos);
+            let depth = $pos.depth;
+            while (depth > 1) depth--;
+            if (depth < 1) {
+              hide();
+              return;
+            }
+            const nodePos = $pos.before(depth);
+            const dom = view.nodeDOM(nodePos);
+            if (!(dom instanceof HTMLElement)) {
+              hide();
+              return;
+            }
+            const nodeRect = dom.getBoundingClientRect();
+            const editorRect = view.dom.getBoundingClientRect();
+            handle.style.opacity = "1";
+            handle.style.top = `${nodeRect.top - editorRect.top + 2}px`;
+            hoveredNodePos = nodePos;
+          }
+
+          function hide() {
+            handle.style.opacity = "0";
+            hoveredNodePos = null;
+          }
+
+          function onDragStart(e: DragEvent) {
+            if (hoveredNodePos === null || !e.dataTransfer) return;
+            try {
+              const sel = NodeSelection.create(view.state.doc, hoveredNodePos);
+              view.dispatch(view.state.tr.setSelection(sel));
+              const slice = sel.content();
+              view.dragging = { slice, move: true };
+              e.dataTransfer.effectAllowed = "move";
+            } catch {
+              // Position became invalid after doc change — abort drag
+              hide();
+            }
+          }
+
+          view.dom.addEventListener("mousemove", updateHandle);
+          view.dom.addEventListener("mouseleave", hide);
+          handle.addEventListener("dragstart", onDragStart);
+
+          return {
+            destroy() {
+              if (rafId !== null) cancelAnimationFrame(rafId);
+              view.dom.removeEventListener("mousemove", updateHandle);
+              view.dom.removeEventListener("mouseleave", hide);
+              handle.removeEventListener("dragstart", onDragStart);
+              handle.remove();
+            },
+          };
+        },
+      }),
+    ];
+  },
+});
 
 interface TipTapEditorProps {
   content: string;
@@ -35,25 +145,158 @@ const TEXT_COLORS = [
   { label: "Teal", value: "#0d9488" },
 ];
 
+const CODE_LANGUAGES = [
+  { label: "Auto", value: "" },
+  { label: "JavaScript", value: "javascript" },
+  { label: "TypeScript", value: "typescript" },
+  { label: "Python", value: "python" },
+  { label: "HTML", value: "xml" },
+  { label: "CSS", value: "css" },
+  { label: "JSON", value: "json" },
+  { label: "Bash", value: "bash" },
+  { label: "SQL", value: "sql" },
+  { label: "Go", value: "go" },
+  { label: "Rust", value: "rust" },
+  { label: "Java", value: "java" },
+  { label: "YAML", value: "yaml" },
+];
+
+interface SlashItem {
+  label: string;
+  description: string;
+  searchTerms: string;
+  command: (editor: Editor) => void;
+}
+
 /* ────────────────────────────────────────── */
-/* Editor Component                           */
+/* Editor Component                            */
 /* ────────────────────────────────────────── */
 
 export function TipTapEditor({
   content,
   onChange,
-  placeholder = "Write your content...",
+  placeholder = "Write your content... (type / for commands)",
 }: TipTapEditorProps) {
+  const editorWrapRef = useRef<HTMLDivElement>(null);
+  const isInternalUpdate = useRef(false);
+
+  // Slash menu state
+  const [slashMenu, setSlashMenu] = useState<{
+    query: string;
+    from: number;
+    top: number;
+    left: number;
+  } | null>(null);
+  const [slashIndex, setSlashIndex] = useState(0);
+
+  // Image edit state
+  const [imagePopoverOpen, setImagePopoverOpen] = useState(false);
+
+  // YouTube insert state
+  const [youtubeOpen, setYoutubeOpen] = useState(false);
+
+  const slashItems = useMemo<SlashItem[]>(
+    () => [
+      {
+        label: "Text",
+        description: "Plain paragraph",
+        searchTerms: "text paragraph",
+        command: (ed) => ed.chain().focus().setParagraph().run(),
+      },
+      {
+        label: "Heading 1",
+        description: "Large heading",
+        searchTerms: "heading h1 title",
+        command: (ed) => ed.chain().focus().toggleHeading({ level: 1 }).run(),
+      },
+      {
+        label: "Heading 2",
+        description: "Medium heading",
+        searchTerms: "heading h2 subtitle",
+        command: (ed) => ed.chain().focus().toggleHeading({ level: 2 }).run(),
+      },
+      {
+        label: "Heading 3",
+        description: "Small heading",
+        searchTerms: "heading h3",
+        command: (ed) => ed.chain().focus().toggleHeading({ level: 3 }).run(),
+      },
+      {
+        label: "Bullet List",
+        description: "Unordered list",
+        searchTerms: "bullet list unordered ul",
+        command: (ed) => ed.chain().focus().toggleBulletList().run(),
+      },
+      {
+        label: "Numbered List",
+        description: "Ordered list",
+        searchTerms: "numbered list ordered ol",
+        command: (ed) => ed.chain().focus().toggleOrderedList().run(),
+      },
+      {
+        label: "Blockquote",
+        description: "Quote block",
+        searchTerms: "blockquote quote",
+        command: (ed) => ed.chain().focus().toggleBlockquote().run(),
+      },
+      {
+        label: "Code Block",
+        description: "Syntax-highlighted code",
+        searchTerms: "code block pre syntax",
+        command: (ed) => ed.chain().focus().toggleCodeBlock().run(),
+      },
+      {
+        label: "Table",
+        description: "Insert a 3×3 table",
+        searchTerms: "table grid",
+        command: (ed) =>
+          ed
+            .chain()
+            .focus()
+            .insertTable({ rows: 3, cols: 3, withHeaderRow: true })
+            .run(),
+      },
+      {
+        label: "Image",
+        description: "Upload or embed an image",
+        searchTerms: "image picture photo",
+        command: () => {
+          /* handled via ref below */
+        },
+      },
+      {
+        label: "YouTube",
+        description: "Embed a YouTube video",
+        searchTerms: "youtube video embed",
+        command: () => setYoutubeOpen(true),
+      },
+      {
+        label: "Divider",
+        description: "Horizontal rule",
+        searchTerms: "divider hr horizontal rule separator",
+        command: (ed) => ed.chain().focus().setHorizontalRule().run(),
+      },
+    ],
+    [],
+  );
+
+  // File input ref for image slash command
+  const slashImageFileRef = useRef<HTMLInputElement>(null);
+
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
         heading: { levels: [1, 2, 3, 4] },
+        codeBlock: false,
       }),
       LinkExtension.configure({
         openOnClick: false,
         HTMLAttributes: { rel: "noopener noreferrer", target: "_blank" },
       }),
-      ImageExtension,
+      ImageExtension.configure({
+        allowBase64: false,
+        HTMLAttributes: { loading: "lazy" },
+      }),
       Placeholder.configure({ placeholder }),
       Underline,
       TextAlign.configure({ types: ["heading", "paragraph"] }),
@@ -61,22 +304,166 @@ export function TipTapEditor({
       TextStyle,
       Color,
       Typography,
+      Table.configure({ resizable: false, HTMLAttributes: { class: "editor-table" } }),
+      TableRow,
+      TableCell,
+      TableHeader,
+      CodeBlockLowlight.configure({ lowlight }),
+      Youtube.configure({
+        controls: true,
+        nocookie: true,
+        HTMLAttributes: { class: "youtube-embed" },
+      }),
+      DragHandle,
     ],
     content,
-    onUpdate: ({ editor: e }) => onChange(e.getHTML()),
+    onUpdate: ({ editor: e }) => {
+      isInternalUpdate.current = true;
+      onChange(e.getHTML());
+    },
   });
 
+  // Sync external content — only for reset/initial load, skip when change came from editor itself
   useEffect(() => {
-    if (editor && content !== editor.getHTML()) {
-      editor.commands.setContent(content);
+    if (!editor) return;
+    if (isInternalUpdate.current) {
+      isInternalUpdate.current = false;
+      return;
     }
+    editor.commands.setContent(content);
   }, [content, editor]);
+
+  // Slash menu detection
+  useEffect(() => {
+    if (!editor) return;
+    const handleUpdate = () => {
+      const { $anchor } = editor.state.selection;
+      if ($anchor.parent.type.name !== "paragraph") {
+        setSlashMenu(null);
+        return;
+      }
+      const textBefore = $anchor.parent.textContent.slice(
+        0,
+        $anchor.parentOffset,
+      );
+      const match = textBefore.match(/^\/(\w*)$/);
+      if (match) {
+        const coords = editor.view.coordsAtPos(editor.state.selection.from);
+        const rect = editorWrapRef.current?.getBoundingClientRect();
+        if (rect) {
+          setSlashMenu({
+            query: match[1] ?? "",
+            from: $anchor.pos - textBefore.length,
+            top: coords.bottom - rect.top + 4,
+            left: Math.max(0, coords.left - rect.left),
+          });
+          setSlashIndex(0);
+        }
+      } else {
+        setSlashMenu(null);
+      }
+    };
+    editor.on("update", handleUpdate);
+    editor.on("selectionUpdate", handleUpdate);
+    return () => {
+      editor.off("update", handleUpdate);
+      editor.off("selectionUpdate", handleUpdate);
+    };
+  }, [editor]);
+
+  // Filter slash items
+  const filteredSlashItems = useMemo(() => {
+    if (!slashMenu) return slashItems;
+    const q = slashMenu.query.toLowerCase();
+    if (!q) return slashItems;
+    return slashItems.filter(
+      (item) =>
+        item.label.toLowerCase().includes(q) ||
+        item.searchTerms.includes(q),
+    );
+  }, [slashMenu, slashItems]);
+
+  // Execute slash command
+  const executeSlashCommand = useCallback(
+    (item: SlashItem) => {
+      if (!editor || !slashMenu) return;
+      // Delete the /query text
+      editor
+        .chain()
+        .focus()
+        .deleteRange({ from: slashMenu.from, to: editor.state.selection.from })
+        .run();
+
+      if (item.label === "Image") {
+        slashImageFileRef.current?.click();
+      } else {
+        item.command(editor);
+      }
+      setSlashMenu(null);
+    },
+    [editor, slashMenu],
+  );
+
+  // Keyboard handler for slash menu (capture phase to intercept before ProseMirror)
+  useEffect(() => {
+    if (!editor || !slashMenu) return;
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        e.preventDefault();
+        e.stopPropagation();
+        setSlashMenu(null);
+        return;
+      }
+      if (e.key === "ArrowDown") {
+        e.preventDefault();
+        e.stopPropagation();
+        setSlashIndex((i) =>
+          Math.min(i + 1, filteredSlashItems.length - 1),
+        );
+        return;
+      }
+      if (e.key === "ArrowUp") {
+        e.preventDefault();
+        e.stopPropagation();
+        setSlashIndex((i) => Math.max(i - 1, 0));
+        return;
+      }
+      if (e.key === "Enter") {
+        e.preventDefault();
+        e.stopPropagation();
+        const item = filteredSlashItems[slashIndex];
+        if (item) executeSlashCommand(item);
+        return;
+      }
+    };
+    const dom = editor.view.dom;
+    dom.addEventListener("keydown", handler, true);
+    return () => dom.removeEventListener("keydown", handler, true);
+  }, [editor, slashMenu, slashIndex, filteredSlashItems, executeSlashCommand]);
+
+  // Handle image upload from slash command
+  const handleSlashImageUpload = useCallback(
+    async (file: File) => {
+      if (!editor) return;
+      try {
+        const result = await adminUpload<{ url: string }>(file, "blog");
+        editor.chain().focus().setImage({ src: result.url }).run();
+      } catch {
+        /* upload failed */
+      }
+    },
+    [editor],
+  );
 
   if (!editor) return null;
 
+  const isInTable = editor.isActive("table");
+  const isInCodeBlock = editor.isActive("codeBlock");
+  const isImageSelected = editor.isActive("image");
+
   return (
     <div className="glass-subtle overflow-hidden rounded-xl">
-      {/* ── Toolbar ── */}
+      {/* ── Main Toolbar ── */}
       <div className="flex flex-wrap items-center gap-0.5 border-b border-glass-border px-2 py-1.5">
         {/* History */}
         <ToolbarBtn
@@ -220,25 +607,118 @@ export function TipTapEditor({
 
         <Divider />
 
-        {/* Link & Image */}
+        {/* Link, Image, YouTube, Table */}
         <LinkButton editor={editor} />
         <ImageButton editor={editor} />
+        <YouTubeButton editor={editor} open={youtubeOpen} setOpen={setYoutubeOpen} />
+        <TableButton editor={editor} />
+
+        {/* Image edit (when image selected) */}
+        {isImageSelected && (
+          <>
+            <Divider />
+            <ImageEditButton
+              editor={editor}
+              open={imagePopoverOpen}
+              setOpen={setImagePopoverOpen}
+            />
+          </>
+        )}
       </div>
 
-      {/* ── Editor content ── */}
-      <EditorContent
-        editor={editor}
-        className="prose prose-sm max-w-none px-4 py-3 text-foreground focus:outline-none [&_.tiptap]:min-h-75 [&_.tiptap]:outline-none [&_.tiptap_p.is-editor-empty:first-child::before]:text-muted-foreground [&_.tiptap_p.is-editor-empty:first-child::before]:content-[attr(data-placeholder)] [&_.tiptap_p.is-editor-empty:first-child::before]:float-left [&_.tiptap_p.is-editor-empty:first-child::before]:h-0 [&_.tiptap_p.is-editor-empty:first-child::before]:pointer-events-none"
+      {/* ── Table operations bar ── */}
+      {isInTable && <TableOpsBar editor={editor} />}
+
+      {/* ── Code language selector ── */}
+      {isInCodeBlock && <CodeLanguageBar editor={editor} />}
+
+      {/* ── Editor content + overlays ── */}
+      <div ref={editorWrapRef} className="relative">
+        <EditorContent
+          editor={editor}
+          className="prose prose-sm max-w-none px-4 py-3 text-foreground focus:outline-none [&_.tiptap]:min-h-75 [&_.tiptap]:outline-none [&_.tiptap_p.is-editor-empty:first-child::before]:text-muted-foreground [&_.tiptap_p.is-editor-empty:first-child::before]:content-[attr(data-placeholder)] [&_.tiptap_p.is-editor-empty:first-child::before]:float-left [&_.tiptap_p.is-editor-empty:first-child::before]:h-0 [&_.tiptap_p.is-editor-empty:first-child::before]:pointer-events-none"
+        />
+
+        {/* Slash commands menu */}
+        {slashMenu && filteredSlashItems.length > 0 && (
+          <div
+            className="absolute z-30 w-64 overflow-hidden rounded-xl border border-glass-border bg-background shadow-lg"
+            style={{ top: slashMenu.top, left: slashMenu.left }}
+          >
+            <div className="max-h-64 overflow-y-auto py-1">
+              {filteredSlashItems.map((item, i) => (
+                <button
+                  key={item.label}
+                  type="button"
+                  onMouseDown={(e) => {
+                    e.preventDefault();
+                    executeSlashCommand(item);
+                  }}
+                  onMouseEnter={() => setSlashIndex(i)}
+                  className={`flex w-full items-center gap-3 px-3 py-2 text-left transition-colors ${
+                    i === slashIndex
+                      ? "bg-primary-500/10 text-foreground"
+                      : "text-muted-foreground hover:bg-muted/30"
+                  }`}
+                >
+                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-muted/40 text-xs font-medium">
+                    {slashIcons[item.label] ?? "?"}
+                  </span>
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-medium text-foreground">
+                      {item.label}
+                    </p>
+                    <p className="truncate text-[11px] text-muted-foreground">
+                      {item.description}
+                    </p>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Hidden file input for slash Image command */}
+      <input
+        ref={slashImageFileRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={(e) => {
+          const file = e.target.files?.[0];
+          if (file) handleSlashImageUpload(file);
+          e.target.value = "";
+        }}
       />
     </div>
   );
 }
 
 /* ────────────────────────────────────────── */
-/* Color Picker                               */
+/* Slash command icon map                      */
 /* ────────────────────────────────────────── */
 
-function ColorPicker({ editor }: { editor: ReturnType<typeof useEditor> }) {
+const slashIcons: Record<string, string> = {
+  Text: "¶",
+  "Heading 1": "H1",
+  "Heading 2": "H2",
+  "Heading 3": "H3",
+  "Bullet List": "•",
+  "Numbered List": "1.",
+  Blockquote: "❝",
+  "Code Block": "</>",
+  Table: "⊞",
+  Image: "🖼",
+  YouTube: "▶",
+  Divider: "—",
+};
+
+/* ────────────────────────────────────────── */
+/* Color Picker                                */
+/* ────────────────────────────────────────── */
+
+function ColorPicker({ editor }: { editor: Editor }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -251,8 +731,6 @@ function ColorPicker({ editor }: { editor: ReturnType<typeof useEditor> }) {
     document.addEventListener("mousedown", handleClick);
     return () => document.removeEventListener("mousedown", handleClick);
   }, [open]);
-
-  if (!editor) return null;
 
   return (
     <div ref={ref} className="relative">
@@ -289,9 +767,7 @@ function ColorPicker({ editor }: { editor: ReturnType<typeof useEditor> }) {
                 setOpen(false);
               }}
               className="h-5 w-5 rounded-full border border-glass-border transition-transform hover:scale-125"
-              style={{
-                backgroundColor: c.value || "#374151",
-              }}
+              style={{ backgroundColor: c.value || "#374151" }}
             />
           ))}
         </div>
@@ -301,10 +777,10 @@ function ColorPicker({ editor }: { editor: ReturnType<typeof useEditor> }) {
 }
 
 /* ────────────────────────────────────────── */
-/* Link Popover                               */
+/* Link Popover                                */
 /* ────────────────────────────────────────── */
 
-function LinkButton({ editor }: { editor: ReturnType<typeof useEditor> }) {
+function LinkButton({ editor }: { editor: Editor }) {
   const [open, setOpen] = useState(false);
   const [url, setUrl] = useState("");
   const [newTab, setNewTab] = useState(true);
@@ -322,7 +798,6 @@ function LinkButton({ editor }: { editor: ReturnType<typeof useEditor> }) {
   }, [open]);
 
   const openPopover = useCallback(() => {
-    if (!editor) return;
     const existing = editor.getAttributes("link").href as string | undefined;
     setUrl(existing ?? "");
     setNewTab(true);
@@ -331,28 +806,21 @@ function LinkButton({ editor }: { editor: ReturnType<typeof useEditor> }) {
   }, [editor]);
 
   const applyLink = useCallback(() => {
-    if (!editor) return;
     if (url) {
       editor
         .chain()
         .focus()
         .extendMarkRange("link")
-        .setLink({
-          href: url,
-          target: newTab ? "_blank" : null,
-        })
+        .setLink({ href: url, target: newTab ? "_blank" : null })
         .run();
     }
     setOpen(false);
   }, [editor, url, newTab]);
 
   const removeLink = useCallback(() => {
-    if (!editor) return;
     editor.chain().focus().extendMarkRange("link").unsetLink().run();
     setOpen(false);
   }, [editor]);
-
-  if (!editor) return null;
 
   return (
     <div ref={ref} className="relative">
@@ -408,12 +876,13 @@ function LinkButton({ editor }: { editor: ReturnType<typeof useEditor> }) {
 }
 
 /* ────────────────────────────────────────── */
-/* Image Upload + URL                         */
+/* Image Upload + URL                          */
 /* ────────────────────────────────────────── */
 
-function ImageButton({ editor }: { editor: ReturnType<typeof useEditor> }) {
+function ImageButton({ editor }: { editor: Editor }) {
   const [open, setOpen] = useState(false);
   const [url, setUrl] = useState("");
+  const [alt, setAlt] = useState("");
   const [uploading, setUploading] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
   const ref = useRef<HTMLDivElement>(null);
@@ -428,31 +897,30 @@ function ImageButton({ editor }: { editor: ReturnType<typeof useEditor> }) {
     return () => document.removeEventListener("mousedown", handleClick);
   }, [open]);
 
-  const insertFromUrl = useCallback(() => {
-    if (!editor || !url) return;
-    editor.chain().focus().setImage({ src: url }).run();
-    setUrl("");
-    setOpen(false);
-  }, [editor, url]);
+  const insertImage = useCallback(
+    (src: string) => {
+      editor.chain().focus().setImage({ src, alt: alt || undefined }).run();
+      setUrl("");
+      setAlt("");
+      setOpen(false);
+    },
+    [editor, alt],
+  );
 
   const handleFileUpload = useCallback(
     async (file: File) => {
-      if (!editor) return;
       setUploading(true);
       try {
         const result = await adminUpload<{ url: string }>(file, "blog");
-        editor.chain().focus().setImage({ src: result.url }).run();
-        setOpen(false);
+        insertImage(result.url);
       } catch {
-        /* upload failed — user will see no image inserted */
+        /* upload failed */
       } finally {
         setUploading(false);
       }
     },
-    [editor],
+    [insertImage],
   );
-
-  if (!editor) return null;
 
   return (
     <div ref={ref} className="relative">
@@ -465,7 +933,6 @@ function ImageButton({ editor }: { editor: ReturnType<typeof useEditor> }) {
       </ToolbarBtn>
       {open && (
         <div className="absolute right-0 top-full z-20 mt-1 w-72 rounded-xl border border-glass-border bg-background p-3 shadow-lg">
-          {/* File upload */}
           <input
             ref={fileRef}
             type="file"
@@ -486,7 +953,6 @@ function ImageButton({ editor }: { editor: ReturnType<typeof useEditor> }) {
             {uploading ? "Uploading..." : "Click to upload image"}
           </button>
 
-          {/* URL fallback */}
           <div className="my-2 flex items-center gap-2 text-xs text-muted-foreground">
             <div className="h-px flex-1 bg-glass-border" />
             or
@@ -497,16 +963,185 @@ function ImageButton({ editor }: { editor: ReturnType<typeof useEditor> }) {
               type="url"
               value={url}
               onChange={(e) => setUrl(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && insertFromUrl()}
+              onKeyDown={(e) => e.key === "Enter" && url && insertImage(url)}
               placeholder="Paste image URL"
               className="flex-1 rounded-lg border border-glass-border bg-transparent px-2.5 py-1.5 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary-500/30"
             />
             <button
               type="button"
-              onClick={insertFromUrl}
+              onClick={() => url && insertImage(url)}
               className="rounded-lg bg-primary-500/10 px-3 py-1.5 text-xs font-medium text-primary-600 hover:bg-primary-500/20"
             >
               Insert
+            </button>
+          </div>
+          <input
+            type="text"
+            value={alt}
+            onChange={(e) => setAlt(e.target.value)}
+            placeholder="Alt text (optional)"
+            className="mt-2 w-full rounded-lg border border-glass-border bg-transparent px-2.5 py-1.5 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary-500/30"
+          />
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ────────────────────────────────────────── */
+/* Image Edit Popover (alt + caption)          */
+/* ────────────────────────────────────────── */
+
+function ImageEditButton({
+  editor,
+  open,
+  setOpen,
+}: {
+  editor: Editor;
+  open: boolean;
+  setOpen: (v: boolean) => void;
+}) {
+  const [imgAlt, setImgAlt] = useState("");
+  const [imgTitle, setImgTitle] = useState("");
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const handleClick = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node))
+        setOpen(false);
+    };
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, [open, setOpen]);
+
+  const openEdit = useCallback(() => {
+    const attrs = editor.getAttributes("image");
+    setImgAlt((attrs.alt as string) ?? "");
+    setImgTitle((attrs.title as string) ?? "");
+    setOpen(true);
+  }, [editor, setOpen]);
+
+  const apply = useCallback(() => {
+    editor
+      .chain()
+      .focus()
+      .updateAttributes("image", {
+        alt: imgAlt || null,
+        title: imgTitle || null,
+      })
+      .run();
+    setOpen(false);
+  }, [editor, imgAlt, imgTitle, setOpen]);
+
+  return (
+    <div ref={ref} className="relative">
+      <ToolbarBtn active={open} onClick={openEdit} title="Edit Image">
+        <span className="text-[10px]">Alt</span>
+      </ToolbarBtn>
+      {open && (
+        <div className="absolute right-0 top-full z-20 mt-1 w-64 rounded-xl border border-glass-border bg-background p-3 shadow-lg">
+          <label className="mb-1 block text-[11px] font-medium text-muted-foreground">
+            Alt Text
+          </label>
+          <input
+            type="text"
+            value={imgAlt}
+            onChange={(e) => setImgAlt(e.target.value)}
+            placeholder="Describe the image"
+            className="mb-2 w-full rounded-lg border border-glass-border bg-transparent px-2.5 py-1.5 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary-500/30"
+          />
+          <label className="mb-1 block text-[11px] font-medium text-muted-foreground">
+            Caption
+          </label>
+          <input
+            type="text"
+            value={imgTitle}
+            onChange={(e) => setImgTitle(e.target.value)}
+            placeholder="Image caption (optional)"
+            className="mb-2 w-full rounded-lg border border-glass-border bg-transparent px-2.5 py-1.5 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary-500/30"
+          />
+          <button
+            type="button"
+            onClick={apply}
+            className="rounded-lg bg-primary-500/10 px-3 py-1 text-xs font-medium text-primary-600 hover:bg-primary-500/20"
+          >
+            Apply
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ────────────────────────────────────────── */
+/* YouTube Embed                               */
+/* ────────────────────────────────────────── */
+
+function YouTubeButton({
+  editor,
+  open,
+  setOpen,
+}: {
+  editor: Editor;
+  open: boolean;
+  setOpen: (v: boolean) => void;
+}) {
+  const [url, setUrl] = useState("");
+  const ref = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const handleClick = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node))
+        setOpen(false);
+    };
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, [open, setOpen]);
+
+  useEffect(() => {
+    if (open) setTimeout(() => inputRef.current?.focus(), 50);
+  }, [open]);
+
+  const embed = useCallback(() => {
+    if (!url.trim()) return;
+    editor.commands.setYoutubeVideo({ src: url.trim() });
+    setUrl("");
+    setOpen(false);
+  }, [editor, url, setOpen]);
+
+  return (
+    <div ref={ref} className="relative">
+      <ToolbarBtn
+        active={open}
+        onClick={() => setOpen(!open)}
+        title="Embed YouTube Video"
+      >
+        <VideoIcon />
+      </ToolbarBtn>
+      {open && (
+        <div className="absolute right-0 top-full z-20 mt-1 w-80 rounded-xl border border-glass-border bg-background p-3 shadow-lg">
+          <p className="mb-2 text-[11px] font-medium text-muted-foreground">
+            Paste a YouTube URL
+          </p>
+          <div className="flex gap-1.5">
+            <input
+              ref={inputRef}
+              type="url"
+              value={url}
+              onChange={(e) => setUrl(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && embed()}
+              placeholder="https://youtube.com/watch?v=..."
+              className="flex-1 rounded-lg border border-glass-border bg-transparent px-2.5 py-1.5 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary-500/30"
+            />
+            <button
+              type="button"
+              onClick={embed}
+              className="rounded-lg bg-primary-500/10 px-3 py-1.5 text-xs font-medium text-primary-600 hover:bg-primary-500/20"
+            >
+              Embed
             </button>
           </div>
         </div>
@@ -516,7 +1151,136 @@ function ImageButton({ editor }: { editor: ReturnType<typeof useEditor> }) {
 }
 
 /* ────────────────────────────────────────── */
-/* Toolbar Helpers                            */
+/* Table Insert Button                         */
+/* ────────────────────────────────────────── */
+
+function TableButton({ editor }: { editor: Editor }) {
+  return (
+    <ToolbarBtn
+      active={editor.isActive("table")}
+      onClick={() =>
+        editor
+          .chain()
+          .focus()
+          .insertTable({ rows: 3, cols: 3, withHeaderRow: true })
+          .run()
+      }
+      title="Insert Table"
+    >
+      <TableIcon />
+    </ToolbarBtn>
+  );
+}
+
+/* ────────────────────────────────────────── */
+/* Table Operations Bar                        */
+/* ────────────────────────────────────────── */
+
+function TableOpsBar({ editor }: { editor: Editor }) {
+  return (
+    <div className="flex flex-wrap items-center gap-0.5 border-b border-glass-border bg-primary-500/5 px-2 py-1">
+      <span className="mr-1 text-[10px] font-semibold uppercase tracking-wider text-primary-600">
+        Table
+      </span>
+      <SmallBtn onClick={() => editor.chain().focus().addRowBefore().run()}>
+        + Row Above
+      </SmallBtn>
+      <SmallBtn onClick={() => editor.chain().focus().addRowAfter().run()}>
+        + Row Below
+      </SmallBtn>
+      <SmallBtn onClick={() => editor.chain().focus().addColumnBefore().run()}>
+        + Col Left
+      </SmallBtn>
+      <SmallBtn onClick={() => editor.chain().focus().addColumnAfter().run()}>
+        + Col Right
+      </SmallBtn>
+      <span className="mx-0.5 h-4 w-px bg-glass-border" />
+      <SmallBtn onClick={() => editor.chain().focus().deleteRow().run()}>
+        Del Row
+      </SmallBtn>
+      <SmallBtn onClick={() => editor.chain().focus().deleteColumn().run()}>
+        Del Col
+      </SmallBtn>
+      <SmallBtn onClick={() => editor.chain().focus().toggleHeaderRow().run()}>
+        Toggle Header
+      </SmallBtn>
+      <SmallBtn onClick={() => editor.chain().focus().mergeCells().run()}>
+        Merge
+      </SmallBtn>
+      <SmallBtn onClick={() => editor.chain().focus().splitCell().run()}>
+        Split
+      </SmallBtn>
+      <span className="mx-0.5 h-4 w-px bg-glass-border" />
+      <SmallBtn
+        onClick={() => editor.chain().focus().deleteTable().run()}
+        danger
+      >
+        Delete Table
+      </SmallBtn>
+    </div>
+  );
+}
+
+function SmallBtn({
+  onClick,
+  children,
+  danger,
+}: {
+  onClick: () => void;
+  children: React.ReactNode;
+  danger?: boolean;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`rounded px-1.5 py-0.5 text-[11px] font-medium transition-colors ${
+        danger
+          ? "text-destructive hover:bg-destructive/10"
+          : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
+      }`}
+    >
+      {children}
+    </button>
+  );
+}
+
+/* ────────────────────────────────────────── */
+/* Code Language Selector                      */
+/* ────────────────────────────────────────── */
+
+function CodeLanguageBar({ editor }: { editor: Editor }) {
+  const currentLang =
+    (editor.getAttributes("codeBlock").language as string) || "";
+
+  return (
+    <div className="flex items-center gap-2 border-b border-glass-border bg-primary-500/5 px-3 py-1">
+      <span className="text-[10px] font-semibold uppercase tracking-wider text-primary-600">
+        Code
+      </span>
+      <select
+        value={currentLang}
+        onChange={(e) =>
+          editor
+            .chain()
+            .focus()
+            .updateAttributes("codeBlock", { language: e.target.value })
+            .run()
+        }
+        className="rounded-md border border-glass-border bg-transparent px-2 py-0.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary-500/30"
+      >
+        {CODE_LANGUAGES.map((lang) => (
+          <option key={lang.value} value={lang.value}>
+            {lang.label}
+          </option>
+        ))}
+      </select>
+    </div>
+  );
+}
+
+/* ────────────────────────────────────────── */
+/* Toolbar Helpers                             */
 /* ────────────────────────────────────────── */
 
 function ToolbarBtn({
@@ -554,7 +1318,7 @@ function Divider() {
 }
 
 /* ────────────────────────────────────────── */
-/* SVG Icons (14×14, stroke-based)            */
+/* SVG Icons (14×14, stroke-based)             */
 /* ────────────────────────────────────────── */
 
 const iconProps = {
@@ -675,6 +1439,26 @@ function ImageIcon() {
       <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
       <circle cx="8.5" cy="8.5" r="1.5" />
       <polyline points="21 15 16 10 5 21" />
+    </svg>
+  );
+}
+
+function VideoIcon() {
+  return (
+    <svg {...iconProps}>
+      <polygon points="5 3 19 12 5 21 5 3" fill="currentColor" stroke="none" />
+    </svg>
+  );
+}
+
+function TableIcon() {
+  return (
+    <svg {...iconProps}>
+      <rect x="3" y="3" width="18" height="18" rx="2" />
+      <line x1="3" y1="9" x2="21" y2="9" />
+      <line x1="3" y1="15" x2="21" y2="15" />
+      <line x1="9" y1="3" x2="9" y2="21" />
+      <line x1="15" y1="3" x2="15" y2="21" />
     </svg>
   );
 }

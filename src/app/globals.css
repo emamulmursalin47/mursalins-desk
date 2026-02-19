@@ -991,6 +991,158 @@ body {
   border-bottom: none;
 }
 
+/* ── Blog YouTube Embed ── */
+.blog-prose .youtube-embed,
+.blog-prose iframe {
+  border-radius: 1rem;
+  margin: 2em 0;
+  max-width: 100%;
+  aspect-ratio: 16/9;
+  width: 100%;
+  height: auto;
+}
+
+/* ── Blog Figure & Caption ── */
+.blog-prose figure {
+  margin: 2em 0;
+}
+.blog-prose figcaption,
+.blog-prose img[title]::after {
+  display: block;
+  text-align: center;
+  font-size: 0.875em;
+  font-style: italic;
+  color: var(--color-muted-foreground);
+  margin-top: 0.75em;
+}
+
+/* ── Syntax Highlighting (One Dark theme) ── */
+.blog-prose pre code .hljs-comment,
+.blog-prose pre code .hljs-quote { color: #5c6370; font-style: italic; }
+.blog-prose pre code .hljs-keyword,
+.blog-prose pre code .hljs-selector-tag,
+.blog-prose pre code .hljs-meta { color: #c678dd; }
+.blog-prose pre code .hljs-string,
+.blog-prose pre code .hljs-addition { color: #98c379; }
+.blog-prose pre code .hljs-number,
+.blog-prose pre code .hljs-literal { color: #d19a66; }
+.blog-prose pre code .hljs-built_in,
+.blog-prose pre code .hljs-type { color: #e6c07b; }
+.blog-prose pre code .hljs-attr,
+.blog-prose pre code .hljs-variable,
+.blog-prose pre code .hljs-template-variable { color: #e06c75; }
+.blog-prose pre code .hljs-function { color: #61afef; }
+.blog-prose pre code .hljs-title { color: #61afef; }
+.blog-prose pre code .hljs-params { color: #abb2bf; }
+.blog-prose pre code .hljs-regexp { color: #56b6c2; }
+.blog-prose pre code .hljs-deletion { color: #e06c75; }
+.blog-prose pre code .hljs-selector-class { color: #d19a66; }
+.blog-prose pre code .hljs-tag { color: #e06c75; }
+.blog-prose pre code .hljs-name { color: #e06c75; }
+.blog-prose pre code .hljs-attribute { color: #d19a66; }
+
+/* Same syntax highlighting for editor code blocks */
+.tiptap pre code .hljs-comment,
+.tiptap pre code .hljs-quote { color: #5c6370; font-style: italic; }
+.tiptap pre code .hljs-keyword,
+.tiptap pre code .hljs-selector-tag,
+.tiptap pre code .hljs-meta { color: #c678dd; }
+.tiptap pre code .hljs-string,
+.tiptap pre code .hljs-addition { color: #98c379; }
+.tiptap pre code .hljs-number,
+.tiptap pre code .hljs-literal { color: #d19a66; }
+.tiptap pre code .hljs-built_in,
+.tiptap pre code .hljs-type { color: #e6c07b; }
+.tiptap pre code .hljs-attr,
+.tiptap pre code .hljs-variable,
+.tiptap pre code .hljs-template-variable { color: #e06c75; }
+.tiptap pre code .hljs-function { color: #61afef; }
+.tiptap pre code .hljs-title { color: #61afef; }
+.tiptap pre code .hljs-params { color: #abb2bf; }
+.tiptap pre code .hljs-regexp { color: #56b6c2; }
+.tiptap pre code .hljs-deletion { color: #e06c75; }
+.tiptap pre code .hljs-tag { color: #e06c75; }
+.tiptap pre code .hljs-name { color: #e06c75; }
+
+/* ── TipTap Editor Table Styles ── */
+.tiptap .editor-table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 1em 0;
+}
+.tiptap .editor-table td,
+.tiptap .editor-table th {
+  border: 1px solid oklch(0.85 0.005 260);
+  padding: 0.5em 0.75em;
+  min-width: 60px;
+  vertical-align: top;
+}
+.tiptap .editor-table th {
+  font-weight: 600;
+  background: oklch(0.95 0.005 260 / 0.5);
+}
+.tiptap .editor-table .selectedCell {
+  background: oklch(0.60 0.14 65 / 0.12);
+}
+
+/* TipTap editor code block dark bg */
+.tiptap pre {
+  background: oklch(0.18 0.005 250);
+  color: oklch(0.92 0.003 265);
+  border-radius: 0.75rem;
+  padding: 1em 1.25em;
+  overflow-x: auto;
+  margin: 0.75em 0;
+}
+.tiptap pre code {
+  background: none;
+  padding: 0;
+  color: inherit;
+  font-size: 0.875em;
+}
+
+/* TipTap YouTube embed in editor */
+.tiptap .youtube-embed {
+  border-radius: 0.75rem;
+  margin: 1em 0;
+  max-width: 100%;
+}
+.tiptap div[data-youtube-video] {
+  aspect-ratio: 16/9;
+  max-width: 100%;
+  margin: 1em 0;
+}
+.tiptap div[data-youtube-video] iframe {
+  width: 100%;
+  height: 100%;
+  border-radius: 0.75rem;
+}
+
+/* ── Editor Drag Handle ── */
+.editor-drag-handle {
+  position: absolute;
+  left: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+  cursor: grab;
+  opacity: 0;
+  transition: opacity 0.15s ease, background-color 0.15s ease;
+  color: oklch(0.55 0.01 265);
+  z-index: 10;
+  user-select: none;
+}
+.editor-drag-handle:hover {
+  background: oklch(0.92 0.01 265);
+  color: oklch(0.4 0.01 265);
+}
+.editor-drag-handle:active {
+  cursor: grabbing;
+}
+
 /* ── Legal prose — justified body text for legal pages ── */
 .legal-prose {
   text-align: justify;
