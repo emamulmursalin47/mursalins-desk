@@ -235,7 +235,7 @@ export default function TestimonialDetailPage() {
             <div className="flex flex-col gap-2">
               {testimonial.status !== "APPROVED" && (
                 <button
-                  onClick={() => updateTestimonial({ approved: true })}
+                  onClick={() => updateTestimonial({ status: "APPROVED" })}
                   disabled={updating}
                   className="btn-glass-primary w-full rounded-xl px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
                 >
@@ -244,7 +244,7 @@ export default function TestimonialDetailPage() {
               )}
               {testimonial.status !== "REJECTED" && (
                 <button
-                  onClick={() => updateTestimonial({ approved: false })}
+                  onClick={() => updateTestimonial({ status: "REJECTED" })}
                   disabled={updating}
                   className="w-full rounded-xl border border-warning/30 px-4 py-2 text-sm font-medium text-warning transition-colors hover:bg-warning/10 disabled:opacity-50"
                 >
@@ -253,7 +253,7 @@ export default function TestimonialDetailPage() {
               )}
               <button
                 onClick={() =>
-                  updateTestimonial({ featured: !testimonial.isFeatured })
+                  updateTestimonial({ isFeatured: !testimonial.isFeatured })
                 }
                 disabled={updating}
                 className="btn-glass-secondary w-full rounded-xl px-4 py-2 text-sm font-medium disabled:opacity-50"
