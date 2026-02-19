@@ -6,7 +6,7 @@ import { gsap } from "@/lib/gsap";
 import { useChat } from "@/contexts/chat-context";
 
 const inputClass =
-  "glass-subtle w-full rounded-xl px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground outline-none ring-ring focus:ring-2 transition-shadow";
+  "w-full rounded-xl border border-foreground/10 bg-white/60 px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground outline-none ring-ring focus:ring-2 focus:border-primary-500/30 transition-shadow";
 
 const compactInputClass =
   "glass-subtle w-full rounded-lg px-3 py-1.5 text-xs text-foreground placeholder:text-muted-foreground outline-none ring-ring focus:ring-1 transition-shadow";
@@ -88,63 +88,51 @@ export function ChatLeadForm() {
   return (
     <div
       ref={formRef}
-      className="absolute inset-x-0 bottom-0 top-[52px] z-10 flex flex-col overflow-hidden bg-[oklch(0.98_0.003_265/0.97)] backdrop-blur-sm"
+      className="absolute inset-x-0 bottom-0 top-[52px] z-10 flex flex-col overflow-hidden bg-[oklch(0.97_0.003_265)] backdrop-blur-sm"
     >
       <div className="flex-1 overflow-y-auto px-5 py-4">
         {/* Header */}
         <div className="mb-4 text-center">
-          <div className="mx-auto mb-2 flex h-9 w-9 items-center justify-center rounded-full bg-blue-500/15">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 20 20"
-              fill="currentColor"
-              className="h-4 w-4 text-blue-400"
-            >
-              <path d="M10 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM3.465 14.493a1.23 1.23 0 0 0 .41 1.412A9.957 9.957 0 0 0 10 18c2.31 0 4.438-.784 6.131-2.1.43-.333.604-.903.408-1.41a7.002 7.002 0 0 0-13.074.003Z" />
-            </svg>
-          </div>
           <h3 className="text-sm font-semibold text-foreground">
             {isAdminOnline ? "Talk to Mursalin" : "Leave a Message"}
           </h3>
-          <p className="mt-0.5 text-[11px] text-muted-foreground">
+          <p className="mt-1 text-xs text-muted-foreground">
             {isAdminOnline
-              ? "Share your details to connect"
+              ? "Share your details so Mursalin can connect with you"
               : "Mursalin is away — typically replies within 2 hours"}
           </p>
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="flex flex-col gap-2.5">
-          <div className="grid grid-cols-2 gap-2.5">
-            <input
-              type="text"
-              required
-              placeholder="Name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              className={compactInputClass}
-              autoFocus
-            />
-            <input
-              type="email"
-              required
-              placeholder="Email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className={compactInputClass}
-            />
-          </div>
+        <form onSubmit={handleSubmit} className="flex flex-col gap-3">
+          <input
+            type="text"
+            required
+            placeholder="Your name"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            className={inputClass}
+            autoFocus
+          />
+          <input
+            type="email"
+            required
+            placeholder="your@email.com"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className={inputClass}
+          />
           <textarea
             required
             placeholder="How can Mursalin help?"
             value={question}
             onChange={(e) => setQuestion(e.target.value)}
             rows={3}
-            className={`${compactInputClass} resize-none`}
+            className={`${inputClass} resize-none`}
           />
           <button
             type="submit"
-            className="btn-glass-primary w-full rounded-xl py-2 text-sm font-semibold text-white"
+            className="btn-glass-primary w-full rounded-xl py-2.5 text-sm font-semibold text-white"
           >
             {isAdminOnline ? "Connect with Mursalin" : "Send Message"}
           </button>
