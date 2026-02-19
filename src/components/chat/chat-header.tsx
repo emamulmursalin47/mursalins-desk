@@ -1,9 +1,24 @@
 "use client";
 
+import { useState, useRef, useEffect } from "react";
 import { useChat } from "@/contexts/chat-context";
 
 export function ChatHeader() {
   const { closeChat, requestHuman, resetChat, mode, isConnected, setShowHistory } = useChat();
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  // Close menu on outside click
+  useEffect(() => {
+    if (!menuOpen) return;
+    const handler = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setMenuOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [menuOpen]);
 
   return (
     <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
@@ -65,22 +80,68 @@ export function ChatHeader() {
             Talk to Mursalin
           </button>
         )}
-        {/* History — always visible */}
-        <button
-          onClick={() => setShowHistory(true)}
-          className="rounded-lg px-2 py-1.5 text-[11px] font-medium text-muted-foreground transition-colors hover:bg-white/10 hover:text-foreground"
-          aria-label="Conversation history"
-        >
-          History
-        </button>
-        {/* New Chat */}
-        <button
-          onClick={resetChat}
-          className="rounded-lg px-2 py-1.5 text-[11px] font-medium text-muted-foreground transition-colors hover:bg-white/10 hover:text-foreground"
-          aria-label="New conversation"
-        >
-          New Chat
-        </button>
+
+        {/* Three-dot menu for History & New Chat */}
+        <div ref={menuRef} className="relative">
+          <button
+            onClick={() => setMenuOpen((v) => !v)}
+            className="flex h-7 w-7 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-white/10 hover:text-foreground"
+            aria-label="More options"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 20 20"
+              fill="currentColor"
+              className="h-4 w-4"
+            >
+              <path d="M10 3a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3ZM10 8.5a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3ZM11.5 15.5a1.5 1.5 0 1 0-3 0 1.5 1.5 0 0 0 3 0Z" />
+            </svg>
+          </button>
+
+          {menuOpen && (
+            <div className="absolute right-0 top-full z-20 mt-1 w-40 overflow-hidden rounded-xl border border-white/10 bg-[oklch(0.97_0.003_265/0.97)] py-1 shadow-lg backdrop-blur-xl">
+              <button
+                onClick={() => {
+                  setShowHistory(true);
+                  setMenuOpen(false);
+                }}
+                className="flex w-full items-center gap-2.5 px-3 py-2 text-left text-[12px] text-foreground transition-colors hover:bg-white/10"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 16 16"
+                  fill="currentColor"
+                  className="h-3.5 w-3.5 text-muted-foreground"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M1 8a7 7 0 1 1 14 0A7 7 0 0 1 1 8Zm7.75-4.25a.75.75 0 0 0-1.5 0V8c0 .414.336.75.75.75h3.25a.75.75 0 0 0 0-1.5h-2.5v-3.5Z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+                History
+              </button>
+              <button
+                onClick={() => {
+                  resetChat();
+                  setMenuOpen(false);
+                }}
+                className="flex w-full items-center gap-2.5 px-3 py-2 text-left text-[12px] text-foreground transition-colors hover:bg-white/10"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 16 16"
+                  fill="currentColor"
+                  className="h-3.5 w-3.5 text-muted-foreground"
+                >
+                  <path d="M8.75 3.75a.75.75 0 0 0-1.5 0v3.5h-3.5a.75.75 0 0 0 0 1.5h3.5v3.5a.75.75 0 0 0 1.5 0v-3.5h3.5a.75.75 0 0 0 0-1.5h-3.5v-3.5Z" />
+                </svg>
+                New Chat
+              </button>
+            </div>
+          )}
+        </div>
+
         {/* Close panel */}
         <button
           onClick={closeChat}
