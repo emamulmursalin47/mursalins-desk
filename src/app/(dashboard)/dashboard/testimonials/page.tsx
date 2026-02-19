@@ -2,7 +2,6 @@
 
 import { useEffect, useState, useRef, useCallback } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useGSAP } from "@gsap/react";
 import { gsap, DURATION_ENTRY, STAGGER_DELAY, GSAP_EASE } from "@/lib/gsap";
 import { adminGet, adminDelete, adminPatch, revalidateCache } from "@/lib/admin-api";
@@ -33,7 +32,6 @@ function StarRating({ rating }: { rating: number }) {
 }
 
 export default function TestimonialsPage() {
-  const router = useRouter();
   const { toast } = useToast();
   const [data, setData] = useState<PaginatedResult<AdminTestimonial> | null>(null);
   const [loading, setLoading] = useState(true);
@@ -176,7 +174,7 @@ export default function TestimonialsPage() {
 
       {loading ? <LoadingState /> : (
         <div data-animate>
-          <DataTable columns={columns} data={data?.data ?? []} keyExtractor={(r) => r.id} onRowClick={(r) => router.push(`/dashboard/testimonials/${r.id}`)} emptyMessage="No testimonials found." />
+          <DataTable columns={columns} data={data?.data ?? []} keyExtractor={(r) => r.id} onRowClick={(r) => openEdit(r)} emptyMessage="No testimonials found." />
           {data?.meta && <Pagination page={data.meta.page} totalPages={data.meta.totalPages} onPageChange={setPage} />}
         </div>
       )}
