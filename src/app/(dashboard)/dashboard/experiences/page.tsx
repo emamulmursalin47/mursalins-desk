@@ -115,18 +115,21 @@ export default function ExperiencesPage() {
       key: "actions",
       label: "",
       render: (r) => (
-        <div
-          className="flex items-center gap-2"
-          onClick={(e) => e.stopPropagation()}
-        >
-          <Link
-            href={`/dashboard/experiences/${r.id}/edit`}
+        <div className="flex items-center gap-2">
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              router.push(`/dashboard/experiences/${r.id}/edit`);
+            }}
             className="text-xs font-medium text-primary-600 hover:text-primary-500"
           >
             Edit
-          </Link>
+          </button>
           <button
-            onClick={() => setDeleteId(r.id)}
+            onClick={(e) => {
+              e.stopPropagation();
+              setDeleteId(r.id);
+            }}
             className="text-xs font-medium text-destructive hover:text-destructive/80"
           >
             Delete

@@ -57,9 +57,9 @@ export default function ProductsPage() {
       key: "actions",
       label: "",
       render: (r) => (
-        <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
-          <Link href={`/dashboard/products/${r.id}/edit`} className="text-xs font-medium text-primary-600 hover:text-primary-500">Edit</Link>
-          <button onClick={() => setDeleteId(r.id)} className="text-xs font-medium text-destructive hover:text-destructive/80">Delete</button>
+        <div className="flex items-center gap-2">
+          <button onClick={(e) => { e.stopPropagation(); router.push(`/dashboard/products/${r.id}/edit`); }} className="text-xs font-medium text-primary-600 hover:text-primary-500">Edit</button>
+          <button onClick={(e) => { e.stopPropagation(); setDeleteId(r.id); }} className="text-xs font-medium text-destructive hover:text-destructive/80">Delete</button>
         </div>
       ),
     },
