@@ -47,8 +47,8 @@ export function TestimonialForm({ testimonial }: TestimonialFormProps) {
           role: role.trim() || undefined,
           company: company.trim() || undefined,
           avatarUrl: avatarUrl.trim() || undefined,
-          approved: status === "APPROVED",
-          featured: isFeatured,
+          status,
+          isFeatured,
         });
         toast("Testimonial updated", "success");
       } else {
