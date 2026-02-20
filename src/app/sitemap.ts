@@ -13,6 +13,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { route: "/store", priority: 0.8, freq: "weekly" },
     { route: "/contact", priority: 0.7, freq: "monthly" },
     { route: "/appointments", priority: 0.7, freq: "monthly" },
+    { route: "/privacy", priority: 0.3, freq: "monthly" },
+    { route: "/terms", priority: 0.3, freq: "monthly" },
   ];
 
   const staticEntries = staticRoutes.map(({ route, priority, freq }) => ({
