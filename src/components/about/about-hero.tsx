@@ -63,7 +63,7 @@ export function AboutHero() {
               <div className="glass-frame glass-shine relative h-full w-full overflow-hidden rounded-3xl px-2 pt-2">
                 <Image
                   src="/hero.png"
-                  alt="Md. Emamul Mursalin"
+                  alt="Md. Emamul Mursalin — Freelance Full-Stack Web Developer from Bangladesh"
                   fill
                   priority
                   sizes="(max-width: 640px) 336px, 400px"
@@ -93,7 +93,7 @@ export function AboutHero() {
               className="text-lg font-medium text-muted-foreground"
               data-animate
             >
-              Software Engineer from Bangladesh
+              Freelance Full-Stack Web Developer from Bangladesh
             </p>
 
             <p
@@ -101,7 +101,7 @@ export function AboutHero() {
               data-animate
             >
               I design and build modern web applications that solve real
-              problems. From idea to deployment, I focus on clean architecture,
+              problems. As a freelance web developer, I focus on clean architecture,
               performance, and experiences that users genuinely enjoy.
             </p>
 

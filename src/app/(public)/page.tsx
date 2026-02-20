@@ -27,22 +27,27 @@ import { NewsletterContact } from "@/components/home/newsletter-contact";
 import { FAQSection } from "@/components/home/faq-section";
 
 export const metadata: Metadata = {
-  title: "Mursalin's Desk — Full-Stack Developer & SaaS Engineer",
+  title:
+    "Freelance Web Developer Bangladesh | Full-Stack Developer — Mursalin's Desk",
   description:
-    "Hire Md. Emamul Mursalin — a full-stack software engineer from Bangladesh building scalable web apps, SaaS platforms, and e-commerce solutions with Next.js, React & Node.js.",
+    "Hire Md. Emamul Mursalin — a freelance full-stack web developer from Bangladesh. Expert in React, Next.js & Node.js delivering professional web development services, SaaS platforms, and e-commerce solutions for businesses worldwide.",
   keywords: [
     ...siteConfig.keywords,
-    "hire full-stack developer",
-    "freelance web developer Bangladesh",
+    "hire freelance web developer",
+    "best web development service Bangladesh",
     "custom web application development",
+    "professional website developer",
+    "affordable freelance developer",
+    "top rated web developer",
   ],
   alternates: {
     canonical: siteConfig.url,
   },
   openGraph: {
-    title: "Mursalin's Desk — Full-Stack Developer & SaaS Engineer",
+    title:
+      "Freelance Web Developer Bangladesh | Hire Full-Stack Developer — Mursalin's Desk",
     description:
-      "Hire Md. Emamul Mursalin — a full-stack software engineer building scalable web apps, SaaS platforms, and e-commerce solutions.",
+      "Hire Md. Emamul Mursalin — a freelance full-stack web developer from Bangladesh. Professional web development services for SaaS, e-commerce & custom web apps.",
     url: siteConfig.url,
     siteName: siteConfig.name,
     images: [
@@ -50,7 +55,7 @@ export const metadata: Metadata = {
         url: siteConfig.ogImage,
         width: 1200,
         height: 630,
-        alt: "Mursalin's Desk — Full-Stack Developer",
+        alt: "Mursalin's Desk — Freelance Full-Stack Web Developer Bangladesh",
       },
     ],
     locale: "en_US",
@@ -58,9 +63,10 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Mursalin's Desk — Full-Stack Developer & SaaS Engineer",
+    title:
+      "Freelance Web Developer Bangladesh | Hire Full-Stack Developer — Mursalin's Desk",
     description:
-      "Hire Md. Emamul Mursalin — a full-stack software engineer building scalable web apps, SaaS platforms, and e-commerce solutions.",
+      "Hire Md. Emamul Mursalin — a freelance full-stack web developer from Bangladesh. Professional web development services for SaaS, e-commerce & custom web apps.",
     images: [siteConfig.ogImage],
     creator: siteConfig.creator.twitter,
   },

@@ -10,10 +10,18 @@ import { BookCallSection } from "@/components/home/book-call-section";
 import { PersonJsonLd, ProfilePageJsonLd } from "@/components/seo/json-ld";
 
 export const metadata: Metadata = constructMetadata({
-  title: "About Md. Emamul Mursalin",
+  title: "About Md. Emamul Mursalin — Freelance Full-Stack Developer Bangladesh",
   description:
-    "Learn about Md. Emamul Mursalin — a software engineer from Bangladesh with expertise in Next.js, React, Node.js, and full-stack web development. View experience, skills, and values.",
+    "Meet Md. Emamul Mursalin — a freelance full-stack web developer from Bangladesh with expertise in React, Next.js, Node.js, and modern web technologies. Years of experience delivering web apps, SaaS platforms, and e-commerce solutions worldwide.",
   path: "/about",
+  keywords: [
+    "about Md. Emamul Mursalin",
+    "freelance developer Bangladesh",
+    "full stack developer Bangladesh",
+    "web developer portfolio",
+    "hire Bangladeshi developer",
+    "remote freelance developer",
+  ],
 });
 
 export default async function AboutPage() {

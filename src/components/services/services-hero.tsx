@@ -41,14 +41,15 @@ export function ServicesHero() {
             data-animate
             className="text-4xl font-bold tracking-tight text-foreground sm:text-5xl lg:text-6xl"
           >
-            What I Can Build For You
+
+            Web Development Services
           </h1>
           <p
             data-animate
             className="mx-auto mt-4 max-w-xl text-lg text-muted-foreground"
           >
-            From landing pages to enterprise platforms — explore service
-            packages tailored to your project scope and budget.
+            Professional freelance web development services — from landing pages to
+            enterprise platforms. Explore packages tailored to your project scope and budget.
           </p>
         </div>
       </Container>

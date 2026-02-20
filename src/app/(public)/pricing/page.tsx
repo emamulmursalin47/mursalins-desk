@@ -9,9 +9,9 @@ import { FAQPageJsonLd } from "@/components/seo/json-ld";
 import { pricingFaqs } from "@/lib/faq-data";
 
 export const metadata: Metadata = {
-  title: "Pricing",
+  title: "Pricing — Affordable Web Development Service Packages",
   description:
-    "Transparent pricing for web development, mobile apps, API/backend, and more. Choose the package that fits your project.",
+    "Transparent and affordable pricing for freelance web development services. Custom web apps, SaaS, e-commerce, API/backend packages. Hire a professional full-stack developer from Bangladesh.",
 };
 
 export default async function PricingPage() {

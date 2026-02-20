@@ -4,9 +4,9 @@ import { ProductsHero } from "@/components/products/products-hero";
 import { ProductsGrid } from "@/components/products/products-grid";
 
 export const metadata: Metadata = {
-  title: "Store",
+  title: "Store — Web Development Templates & Digital Products",
   description:
-    "Browse ready-made digital products — templates, components, and tools built with modern technology and production-ready quality.",
+    "Browse ready-made digital products by a freelance full-stack developer — Next.js templates, React components, SaaS boilerplates, and production-ready tools for web development.",
 };
 
 interface PageProps {

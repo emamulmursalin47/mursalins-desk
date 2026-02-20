@@ -12,7 +12,7 @@ export function BlogFeaturedCard({ post }: BlogFeaturedCardProps) {
     : null;
 
   return (
-    <div className="group/lift" data-animate>
+    <div className="group/lift">
     <article
       className="glass-card glass-shine group overflow-hidden rounded-3xl transition-[transform,box-shadow] duration-300 group-hover/lift:-translate-y-1 group-hover/lift:shadow-xl group-hover/lift:shadow-primary-500/10"
     >

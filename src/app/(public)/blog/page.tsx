@@ -7,10 +7,17 @@ import { BreadcrumbJsonLd } from "@/components/seo/json-ld";
 import { siteConfig } from "@/config/seo";
 
 export const metadata: Metadata = constructMetadata({
-  title: "Blog",
+  title: "Blog — Web Development Tips & Insights",
   description:
-    "Thoughts on development, design, and building digital products.",
+    "Read articles on web development, React, Next.js, Node.js, SaaS building, and full-stack engineering by freelance developer Md. Emamul Mursalin from Bangladesh.",
   path: "/blog",
+  keywords: [
+    "web development blog",
+    "React tutorials",
+    "Next.js tips",
+    "full stack development blog",
+    "freelance developer blog",
+  ],
 });
 
 interface PageProps {

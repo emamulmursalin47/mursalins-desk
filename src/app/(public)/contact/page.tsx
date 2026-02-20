@@ -6,9 +6,9 @@ import { ClientJourney } from "@/components/contact/client-journey";
 import { ContactTabs } from "@/components/contact/contact-tabs";
 
 export const metadata: Metadata = {
-  title: "Contact",
+  title: "Contact — Hire a Freelance Web Developer",
   description:
-    "Get in touch — let's discuss your next project or book a free consultation call.",
+    "Get in touch with Md. Emamul Mursalin — freelance full-stack web developer from Bangladesh. Discuss your project, get a free quote, or book a consultation call for web development services.",
 };
 
 export default async function ContactPage() {

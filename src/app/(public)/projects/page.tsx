@@ -4,9 +4,9 @@ import { ProjectsHero } from "@/components/projects/projects-hero";
 import { ProjectsGrid } from "@/components/projects/projects-grid";
 
 export const metadata: Metadata = {
-  title: "Projects",
+  title: "Projects — Web Development Portfolio",
   description:
-    "Browse my portfolio of completed projects and ongoing work — built with modern technology and thoughtful design.",
+    "Browse the portfolio of Md. Emamul Mursalin — freelance full-stack developer from Bangladesh. See completed web apps, SaaS platforms, and e-commerce projects built with React, Next.js & Node.js.",
 };
 
 interface PageProps {

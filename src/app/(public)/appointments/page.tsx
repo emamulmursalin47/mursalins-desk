@@ -4,9 +4,9 @@ import { AppointmentHero } from "@/components/appointments/appointment-hero";
 import { BookingForm } from "@/components/appointments/booking-form";
 
 export const metadata: Metadata = {
-  title: "Book a Call",
+  title: "Book a Free Call — Hire a Freelance Web Developer",
   description:
-    "Schedule a free consultation call to discuss your project goals and timeline.",
+    "Schedule a free consultation with Md. Emamul Mursalin — freelance full-stack web developer from Bangladesh. Discuss your web app, SaaS, or e-commerce project requirements and get a custom quote.",
 };
 
 export default async function AppointmentsPage() {

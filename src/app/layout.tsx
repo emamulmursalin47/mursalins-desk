@@ -2,7 +2,11 @@ import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
 import { Playfair_Display } from "next/font/google";
 import { defaultMetadata } from "@/config/seo";
-import { WebsiteJsonLd, OrganizationJsonLd } from "@/components/seo/json-ld";
+import {
+  WebsiteJsonLd,
+  OrganizationJsonLd,
+  ProfessionalServiceJsonLd,
+} from "@/components/seo/json-ld";
 import { GoogleAnalytics } from "@/components/analytics/google-analytics";
 import { WaterCanvas } from "@/components/layout/water-canvas";
 import { AuthProvider } from "@/contexts/auth-context";
@@ -54,6 +58,7 @@ export default function RootLayout({
         />
         <WebsiteJsonLd />
         <OrganizationJsonLd />
+        <ProfessionalServiceJsonLd />
       </head>
       <body className="font-sans antialiased">
         <GoogleAnalytics />

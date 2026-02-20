@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 export const siteConfig = {
   name: "Mursalin's Desk",
   description:
-    "Portfolio of Md. Emamul Mursalin — software engineer from Bangladesh specializing in full-stack web development, SaaS platforms, and e-commerce solutions. Explore projects, services, and digital products.",
+    "Md. Emamul Mursalin — freelance full-stack web developer from Bangladesh offering professional web development services. Hire an expert React, Next.js & Node.js developer for SaaS platforms, e-commerce solutions, and custom web applications.",
   url: process.env.NEXT_PUBLIC_SITE_URL ?? "https://mursalinsdesk.com",
   ogImage: `${process.env.NEXT_PUBLIC_SITE_URL ?? "https://mursalinsdesk.com"}/opengraph-image`,
   links: {
@@ -17,18 +17,57 @@ export const siteConfig = {
     twitter: "@mursalinsdesk",
   },
   keywords: [
+    // Brand
     "Md. Emamul Mursalin",
     "Mursalin's Desk",
-    "Software Engineer",
-    "Full-Stack Developer",
-    "Web Developer Bangladesh",
-    "Hire Software Engineer",
-    "Web Development Services",
-    "SaaS Development",
-    "E-Commerce Developer",
-    "Portfolio",
-    "Next.js Developer",
-    "React Developer",
+    // Primary target keywords
+    "freelance web developer",
+    "full stack developer",
+    "freelance developer Bangladesh",
+    "best web development service",
+    "hire web developer",
+    "freelance web developer Bangladesh",
+    // Role variations
+    "software engineer",
+    "full-stack developer",
+    "frontend developer",
+    "backend developer",
+    "React developer",
+    "Next.js developer",
+    "Node.js developer",
+    // Service keywords
+    "web development services",
+    "custom web application development",
+    "website development service",
+    "professional web development",
+    "affordable web development",
+    "web development company Bangladesh",
+    "web development agency",
+    // Niche services
+    "SaaS development",
+    "e-commerce developer",
+    "ecommerce website developer",
+    "web app development",
+    "responsive web design",
+    "mobile-friendly web development",
+    // Hire intent keywords
+    "hire freelance developer",
+    "hire full stack developer",
+    "hire React developer",
+    "hire software engineer",
+    "freelance software engineer",
+    "web developer for hire",
+    "SaaS developer for hire",
+    // Geo-targeted
+    "top web developer Bangladesh",
+    "best freelancer Bangladesh",
+    "Bangladeshi web developer",
+    "remote web developer",
+    // Business intent
+    "startup web developer",
+    "small business web development",
+    "business website developer",
+    "custom software development",
   ],
 } as const;
 

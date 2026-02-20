@@ -7,6 +7,7 @@ interface PageMetadataProps {
   path?: string;
   image?: string;
   noIndex?: boolean;
+  keywords?: string[];
 }
 
 export function constructMetadata({
@@ -15,13 +16,14 @@ export function constructMetadata({
   path = "",
   image = siteConfig.ogImage,
   noIndex = false,
+  keywords = [],
 }: PageMetadataProps): Metadata {
   const url = `${siteConfig.url}${path}`;
 
   return {
     title,
     description,
-    keywords: [...siteConfig.keywords],
+    keywords: [...siteConfig.keywords, ...keywords],
     openGraph: {
       title,
       description,

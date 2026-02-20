@@ -30,15 +30,16 @@ export function ProjectsHero() {
             className="text-5xl font-bold tracking-tight text-foreground sm:text-6xl lg:text-7xl"
             data-animate
           >
-            Projects
+
+            Web Development Portfolio
           </h1>
           <p
             className="mt-6 text-lg leading-relaxed text-muted-foreground sm:text-xl"
             data-animate
           >
-            A showcase of my work — from concept to completion. Each project
-            represents a unique challenge solved with modern technology and
-            thoughtful design.
+            Browse my freelance web development projects — from concept to
+            completion. Each project represents a unique challenge solved with
+            modern technology and thoughtful design.
           </p>
         </div>
       </Container>

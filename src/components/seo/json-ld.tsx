@@ -44,13 +44,23 @@ export function OrganizationJsonLd() {
     founder: {
       "@type": "Person",
       name: siteConfig.creator.name,
+      jobTitle: "Freelance Full-Stack Web Developer",
     },
     contactPoint: {
       "@type": "ContactPoint",
       contactType: "customer service",
       url: `${siteConfig.url}/contact`,
-      availableLanguage: "English",
+      availableLanguage: ["English", "Bengali"],
     },
+    areaServed: "Worldwide",
+    knowsAbout: [
+      "Freelance Web Development",
+      "Full-Stack Development",
+      "SaaS Development",
+      "E-Commerce Development",
+      "React Development",
+      "Next.js Development",
+    ],
     sameAs: [
       siteConfig.links.github,
       siteConfig.links.linkedin,
@@ -238,34 +248,136 @@ export function PersonJsonLd() {
     name: siteConfig.creator.name,
     url: siteConfig.url,
     image: `${siteConfig.url}/hero.png`,
-    jobTitle: "Full-Stack Software Engineer",
+    jobTitle: "Freelance Full-Stack Web Developer",
     description:
-      "Software engineer from Bangladesh specializing in full-stack web development, SaaS platforms, and e-commerce solutions.",
+      "Freelance full-stack web developer from Bangladesh specializing in React, Next.js, Node.js, SaaS platforms, and e-commerce solutions. Available for hire worldwide.",
     address: {
       "@type": "PostalAddress",
+      addressLocality: "Dhaka",
+      addressRegion: "Dhaka Division",
       addressCountry: "BD",
+    },
+    nationality: {
+      "@type": "Country",
+      name: "Bangladesh",
     },
     worksFor: {
       "@type": "Organization",
       name: siteConfig.name,
       url: siteConfig.url,
     },
+    hasOccupation: {
+      "@type": "Occupation",
+      name: "Full-Stack Web Developer",
+      occupationLocation: {
+        "@type": "Country",
+        name: "Bangladesh",
+      },
+      skills:
+        "React, Next.js, Node.js, TypeScript, NestJS, PostgreSQL, SaaS Development, E-Commerce Development",
+    },
+    makesOffer: [
+      {
+        "@type": "Offer",
+        itemOffered: {
+          "@type": "Service",
+          name: "Freelance Web Development",
+          description:
+            "Custom web application development, SaaS platforms, and e-commerce solutions",
+        },
+      },
+      {
+        "@type": "Offer",
+        itemOffered: {
+          "@type": "Service",
+          name: "Full-Stack Development Services",
+          description:
+            "End-to-end web development with React, Next.js, Node.js, and modern technologies",
+        },
+      },
+    ],
     sameAs: [
       siteConfig.links.github,
       siteConfig.links.linkedin,
       siteConfig.links.facebook,
     ],
     knowsAbout: [
-      "Web Development",
+      "Freelance Web Development",
       "Full-Stack Development",
+      "Custom Web Application Development",
+      "SaaS Development",
+      "E-Commerce Development",
       "Next.js",
       "React",
       "Node.js",
       "TypeScript",
-      "E-Commerce",
-      "SaaS",
-      "PostgreSQL",
       "NestJS",
+      "PostgreSQL",
+      "Responsive Web Design",
+      "REST API Development",
+    ],
+  };
+
+  return (
+    <script
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+    />
+  );
+}
+
+export function ProfessionalServiceJsonLd() {
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "ProfessionalService",
+    name: "Mursalin's Desk — Freelance Web Development",
+    url: siteConfig.url,
+    image: `${siteConfig.url}/logo.png`,
+    description:
+      "Professional freelance web development services from Bangladesh. Custom web apps, SaaS platforms, e-commerce solutions by an expert full-stack developer.",
+    priceRange: "$$",
+    address: {
+      "@type": "PostalAddress",
+      addressLocality: "Dhaka",
+      addressRegion: "Dhaka Division",
+      addressCountry: "BD",
+    },
+    geo: {
+      "@type": "GeoCoordinates",
+      latitude: "23.8103",
+      longitude: "90.4125",
+    },
+    areaServed: [
+      { "@type": "Country", name: "Bangladesh" },
+      { "@type": "Country", name: "United States" },
+      { "@type": "Country", name: "United Kingdom" },
+      { "@type": "Country", name: "Canada" },
+      { "@type": "Country", name: "Australia" },
+      "Worldwide",
+    ],
+    serviceType: [
+      "Freelance Web Development",
+      "Full-Stack Development",
+      "Custom Web Application Development",
+      "SaaS Development",
+      "E-Commerce Development",
+      "UI/UX Design",
+      "API Development",
+    ],
+    founder: {
+      "@type": "Person",
+      name: siteConfig.creator.name,
+    },
+    contactPoint: {
+      "@type": "ContactPoint",
+      contactType: "customer service",
+      url: `${siteConfig.url}/contact`,
+      availableLanguage: ["English", "Bengali"],
+    },
+    sameAs: [
+      siteConfig.links.github,
+      siteConfig.links.linkedin,
+      siteConfig.links.facebook,
     ],
   };
 
@@ -286,7 +398,9 @@ export function ProfilePageJsonLd() {
       name: siteConfig.creator.name,
       url: siteConfig.url,
       image: `${siteConfig.url}/hero.png`,
-      jobTitle: "Full-Stack Software Engineer",
+      jobTitle: "Freelance Full-Stack Web Developer",
+      description:
+        "Freelance full-stack web developer from Bangladesh available for hire. Expert in React, Next.js, Node.js, SaaS, and e-commerce development.",
       sameAs: [
         siteConfig.links.github,
         siteConfig.links.linkedin,

@@ -186,9 +186,9 @@ export function HeroSection({
               className="text-4xl font-bold tracking-tight text-foreground sm:text-5xl lg:text-6xl"
               data-animate
             >
-              I Build Web Apps That{" "}
+              Freelance Web Developer{" "}
               <span className="bg-linear-to-r from-primary-500 via-primary-400 to-accent-500 bg-clip-text text-transparent">
-                Grow Your Business
+                Building Apps That Grow Your Business
               </span>
             </h1>
 
@@ -196,9 +196,9 @@ export function HeroSection({
               className="max-w-lg text-lg leading-relaxed text-muted-foreground"
               data-animate
             >
-              Software engineer from Bangladesh specializing in modern web
-              applications, SaaS platforms, and e-commerce solutions for
-              startups and businesses worldwide.
+              Full-stack web developer from Bangladesh offering professional web
+              development services — modern web applications, SaaS platforms,
+              and e-commerce solutions for startups and businesses worldwide.
             </p>
 
             {/* Inline stats */}
@@ -253,7 +253,7 @@ export function HeroSection({
               >
                 <Image
                   src="/hero.png"
-                  alt="Md. Emamul Mursalin"
+                  alt="Md. Emamul Mursalin — Freelance Full-Stack Web Developer from Bangladesh"
                   fill
                   priority
                   sizes="(max-width: 640px) 336px, 400px"
