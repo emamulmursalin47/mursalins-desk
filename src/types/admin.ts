@@ -191,6 +191,12 @@ export interface AdminProduct {
   images: string[];
   technologies: string[];
   features: string[];
+  videoUrl: string | null;
+  whatsIncluded: string[];
+  version: string | null;
+  changelog: string | null;
+  supportUrl: string | null;
+  documentationUrl: string | null;
   isActive: boolean;
   isFeatured: boolean;
   downloadCount: number;

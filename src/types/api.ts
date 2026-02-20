@@ -160,6 +160,12 @@ export interface Product {
   images: string[];
   technologies: string[];
   features: string[];
+  videoUrl: string | null;
+  whatsIncluded: string[];
+  version: string | null;
+  changelog: string | null;
+  supportUrl: string | null;
+  documentationUrl: string | null;
   isFeatured: boolean;
   downloadCount: number;
   rating: string;

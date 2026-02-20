@@ -62,6 +62,18 @@ const licenseDetails: Record<LicenseType, { features: string[] }> = {
   },
 };
 
+/* ─── Helpers ─── */
+
+function getEmbedUrl(url: string): string | null {
+  const ytMatch = url.match(
+    /(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/,
+  );
+  if (ytMatch) return `https://www.youtube.com/embed/${ytMatch[1]}`;
+  const vimeoMatch = url.match(/vimeo\.com\/(\d+)/);
+  if (vimeoMatch) return `https://player.vimeo.com/video/${vimeoMatch[1]}`;
+  return null;
+}
+
 /* ─── Component ─── */
 
 interface ProductDetailViewProps {
@@ -77,12 +89,16 @@ export function ProductDetailView({
 }: ProductDetailViewProps) {
   const heroRef = useRef<HTMLDivElement>(null);
   const headerRef = useRef<HTMLDivElement>(null);
+  const galleryRef = useRef<HTMLDivElement>(null);
+  const videoRef = useRef<HTMLDivElement>(null);
   const licenseRef = useRef<HTMLDivElement>(null);
   const descriptionRef = useRef<HTMLDivElement>(null);
+  const whatsIncludedRef = useRef<HTMLDivElement>(null);
   const featuresRef = useRef<HTMLDivElement>(null);
   const techRef = useRef<HTMLDivElement>(null);
+  const versionRef = useRef<HTMLDivElement>(null);
+  const linksRef = useRef<HTMLDivElement>(null);
   const reviewsRef = useRef<HTMLDivElement>(null);
-  const galleryRef = useRef<HTMLDivElement>(null);
   const ctaRef = useRef<HTMLDivElement>(null);
   const relatedRef = useRef<HTMLDivElement>(null);
   const backRef = useRef<HTMLDivElement>(null);
@@ -93,6 +109,10 @@ export function ProductDetailView({
   const hasImages = product.images && product.images.length > 0;
   const hasLinks = product.previewUrl;
   const license = licenseDetails[product.licenseType];
+  const hasWhatsIncluded = product.whatsIncluded && product.whatsIncluded.length > 0;
+  const hasVideo = product.videoUrl ? !!getEmbedUrl(product.videoUrl) : false;
+  const hasVersion = !!product.version;
+  const hasExternalLinks = product.supportUrl || product.documentationUrl;
 
   useGSAP(() => {
     if (heroRef.current) {
@@ -108,11 +128,20 @@ export function ProductDetailView({
         delay: 0.3,
       });
     }
+    if (galleryRef.current) {
+      createStaggerFadeUp(galleryRef.current, "[data-animate]");
+    }
+    if (videoRef.current) {
+      createFadeUp(videoRef.current);
+    }
     if (licenseRef.current) {
       createFadeUp(licenseRef.current);
     }
     if (descriptionRef.current) {
       createFadeUp(descriptionRef.current);
+    }
+    if (whatsIncludedRef.current) {
+      createStaggerFadeUp(whatsIncludedRef.current, "[data-animate]");
     }
     if (featuresRef.current) {
       createStaggerFadeUp(featuresRef.current, "[data-animate]");
@@ -120,11 +149,14 @@ export function ProductDetailView({
     if (techRef.current) {
       createStaggerFadeUp(techRef.current, "[data-animate]");
     }
+    if (versionRef.current) {
+      createFadeUp(versionRef.current);
+    }
+    if (linksRef.current) {
+      createFadeUp(linksRef.current);
+    }
     if (reviewsRef.current) {
       createFadeUp(reviewsRef.current);
-    }
-    if (galleryRef.current) {
-      createStaggerFadeUp(galleryRef.current, "[data-animate]");
     }
     if (ctaRef.current) {
       createFadeUp(ctaRef.current);
@@ -176,6 +208,11 @@ export function ProductDetailView({
               {hasDiscount && (
                 <span className="inline-flex items-center rounded-full border border-emerald-500/20 bg-emerald-50 px-2.5 py-0.5 text-xs font-medium text-emerald-600 sm:px-3 sm:py-1 sm:text-sm">
                   Sale
+                </span>
+              )}
+              {product.version && (
+                <span className="inline-flex items-center rounded-full border border-primary-500/20 bg-primary-50 px-2.5 py-0.5 text-xs font-medium text-primary-600 sm:px-3 sm:py-1 sm:text-sm">
+                  v{product.version}
                 </span>
               )}
             </div>
@@ -265,7 +302,64 @@ export function ProductDetailView({
         </Container>
       </section>
 
-      {/* ── 3. License Details ── */}
+      {/* ── 3. Gallery / Screenshots ── */}
+      {hasImages && (
+        <section className="py-8 sm:py-12">
+          <Container>
+            <h2 className="mb-5 text-lg font-bold text-foreground sm:mb-8 sm:text-xl">
+              Screenshots
+            </h2>
+            <div
+              ref={galleryRef}
+              className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3"
+            >
+              {product.images.map((imageUrl, i) => (
+                <div
+                  key={i}
+                  className="glass-card glass-shine group overflow-hidden rounded-xl p-1 sm:rounded-2xl"
+                  data-animate
+                >
+                  <div className="relative aspect-video overflow-hidden rounded-lg bg-muted sm:rounded-xl">
+                    <Image
+                      src={imageUrl}
+                      alt={`${product.name} screenshot ${i + 1}`}
+                      fill
+                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                      className="object-cover transition-transform duration-500 ease-out group-hover:scale-105"
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </Container>
+        </section>
+      )}
+
+      {/* ── 4. Video Demo ── */}
+      {hasVideo && (
+        <section className="py-8 sm:py-12">
+          <Container>
+            <div ref={videoRef} data-gsap>
+              <h2 className="mb-4 text-lg font-bold text-foreground sm:mb-6 sm:text-xl">
+                Demo Video
+              </h2>
+              <div className="glass-card glass-shine overflow-hidden rounded-xl sm:rounded-2xl">
+                <div className="relative aspect-video">
+                  <iframe
+                    src={getEmbedUrl(product.videoUrl!)!}
+                    title={`${product.name} demo video`}
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                    className="absolute inset-0 h-full w-full"
+                  />
+                </div>
+              </div>
+            </div>
+          </Container>
+        </section>
+      )}
+
+      {/* ── 5. License Details ── */}
       <section className="py-8 sm:py-12">
         <Container>
           <div
@@ -296,7 +390,7 @@ export function ProductDetailView({
         </Container>
       </section>
 
-      {/* ── 4. Long Description ── */}
+      {/* ── 6. Long Description ── */}
       {product.longDescription && (
         <section className="py-8 sm:py-12">
           <Container>
@@ -316,7 +410,43 @@ export function ProductDetailView({
         </section>
       )}
 
-      {/* ── 5. Key Features ── */}
+      {/* ── 7. What's Included ── */}
+      {hasWhatsIncluded && (
+        <section className="py-8 sm:py-12">
+          <Container>
+            <h2 className="mb-4 text-lg font-bold text-foreground sm:mb-6 sm:text-xl">
+              What&apos;s Included
+            </h2>
+            <div
+              ref={whatsIncludedRef}
+              className="glass-card glass-shine rounded-xl p-5 sm:rounded-2xl sm:p-8"
+            >
+              <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 sm:gap-3">
+                {product.whatsIncluded.map((item, i) => (
+                  <div
+                    key={i}
+                    className="flex items-start gap-2.5 sm:gap-3"
+                    data-animate
+                  >
+                    <svg
+                      className="mt-0.5 h-4 w-4 shrink-0 text-primary-500 sm:h-5 sm:w-5"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      strokeWidth={2}
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                    </svg>
+                    <span className="text-xs text-foreground sm:text-sm">{item}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </Container>
+        </section>
+      )}
+
+      {/* ── 8. Key Features ── */}
       {hasFeatures && (
         <section className="py-8 sm:py-12">
           <Container>
@@ -356,7 +486,7 @@ export function ProductDetailView({
         </section>
       )}
 
-      {/* ── 6. Built With ── */}
+      {/* ── 9. Built With ── */}
       {product.technologies.length > 0 && (
         <section className="py-8 sm:py-12">
           <Container>
@@ -382,11 +512,73 @@ export function ProductDetailView({
         </section>
       )}
 
-      {/* ── 7. Reviews ── */}
+      {/* ── 10. Version & Changelog ── */}
+      {hasVersion && (
+        <section className="py-8 sm:py-12">
+          <Container>
+            <div
+              ref={versionRef}
+              data-gsap
+              className="glass-card glass-shine rounded-xl p-5 sm:rounded-2xl sm:p-8"
+            >
+              <div className="mb-3 flex items-center gap-3 sm:mb-4">
+                <h2 className="text-lg font-bold text-foreground sm:text-xl">
+                  Version History
+                </h2>
+                <span className="inline-flex items-center rounded-full border border-primary-500/20 bg-primary-50 px-2.5 py-0.5 text-xs font-medium text-primary-600">
+                  v{product.version}
+                </span>
+              </div>
+              {product.changelog && (
+                <div className="text-sm leading-relaxed text-muted-foreground whitespace-pre-line sm:text-base">
+                  {product.changelog}
+                </div>
+              )}
+            </div>
+          </Container>
+        </section>
+      )}
+
+      {/* ── 11. Support & Documentation ── */}
+      {hasExternalLinks && (
+        <section className="py-8 sm:py-12">
+          <Container>
+            <div ref={linksRef} data-gsap className="flex flex-wrap gap-3 sm:gap-4">
+              {product.documentationUrl && (
+                <a
+                  href={product.documentationUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="glass-card glass-shine inline-flex items-center gap-2.5 rounded-xl px-5 py-3 text-sm font-medium text-foreground transition-all hover:-translate-y-0.5 sm:rounded-2xl sm:px-6 sm:py-4"
+                >
+                  <svg className="h-5 w-5 text-primary-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" />
+                  </svg>
+                  Documentation
+                </a>
+              )}
+              {product.supportUrl && (
+                <a
+                  href={product.supportUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="glass-card glass-shine inline-flex items-center gap-2.5 rounded-xl px-5 py-3 text-sm font-medium text-foreground transition-all hover:-translate-y-0.5 sm:rounded-2xl sm:px-6 sm:py-4"
+                >
+                  <svg className="h-5 w-5 text-accent-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9 5.25h.008v.008H12v-.008z" />
+                  </svg>
+                  Get Support
+                </a>
+              )}
+            </div>
+          </Container>
+        </section>
+      )}
+
+      {/* ── 12. Reviews ── */}
       <section id="reviews" className="py-8 sm:py-12 scroll-mt-24">
         <Container>
           <div ref={reviewsRef} data-gsap className="space-y-6">
-            {/* Summary card — only when reviews exist */}
             {reviews.length > 0 && (
               <div className="glass-card glass-shine rounded-xl p-5 sm:rounded-2xl sm:p-8">
                 <h2 className="mb-4 text-lg font-bold text-foreground sm:text-xl">
@@ -442,49 +634,13 @@ export function ProductDetailView({
               </div>
             )}
 
-            {/* Individual reviews */}
             <ProductReviews reviews={reviews} />
-
-            {/* Review form */}
             <ReviewForm productId={product.id} />
           </div>
         </Container>
       </section>
 
-      {/* ── 8. Gallery ── */}
-      {hasImages && (
-        <section className="bg-muted/30 py-10 sm:py-16">
-          <Container>
-            <h2 className="mb-5 text-lg font-bold text-foreground sm:mb-8 sm:text-xl">
-              Screenshots
-            </h2>
-            <div
-              ref={galleryRef}
-              className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3"
-            >
-              {product.images.map((imageUrl, i) => (
-                <div
-                  key={i}
-                  className="glass-card glass-shine group overflow-hidden rounded-xl p-1 sm:rounded-2xl"
-                  data-animate
-                >
-                  <div className="relative aspect-video overflow-hidden rounded-lg bg-muted sm:rounded-xl">
-                    <Image
-                      src={imageUrl}
-                      alt={`${product.name} screenshot ${i + 1}`}
-                      fill
-                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                      className="object-cover transition-transform duration-500 ease-out group-hover:scale-105"
-                    />
-                  </div>
-                </div>
-              ))}
-            </div>
-          </Container>
-        </section>
-      )}
-
-      {/* ── 9. CTA ── */}
+      {/* ── 13. CTA ── */}
       <section className="py-10 sm:py-16">
         <Container>
           <div
@@ -520,7 +676,7 @@ export function ProductDetailView({
         </Container>
       </section>
 
-      {/* ── 10. Related Products ── */}
+      {/* ── 14. Related Products ── */}
       {relatedProducts.length > 0 && (
         <section className="bg-muted/30 py-10 sm:py-16">
           <Container>
@@ -539,7 +695,7 @@ export function ProductDetailView({
         </section>
       )}
 
-      {/* ── 11. Back link ── */}
+      {/* ── 15. Back link ── */}
       <section className="py-8 sm:py-12">
         <Container>
           <div ref={backRef} data-gsap className="text-center">

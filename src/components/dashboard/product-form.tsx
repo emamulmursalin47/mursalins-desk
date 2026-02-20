@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { adminPost, adminPatch, revalidateCache } from "@/lib/admin-api";
+import { adminPost, adminPatch, adminUpload, revalidateCache } from "@/lib/admin-api";
 import { FormField } from "@/components/dashboard/form-field";
 import { ImageUpload } from "@/components/dashboard/image-upload";
 import { useToast } from "@/components/dashboard/toast-context";
@@ -33,10 +33,20 @@ export function ProductForm({ product }: ProductFormProps) {
   const [previewUrl, setPreviewUrl] = useState(product?.previewUrl ?? "");
   const [downloadUrl, setDownloadUrl] = useState(product?.downloadUrl ?? "");
   const [thumbnailUrl, setThumbnailUrl] = useState(product?.thumbnailUrl ?? "");
+  const [images, setImages] = useState<string[]>(product?.images ?? []);
+  const [uploadingGallery, setUploadingGallery] = useState(false);
   const [techInput, setTechInput] = useState("");
   const [technologies, setTechnologies] = useState<string[]>(product?.technologies ?? []);
   const [featureInput, setFeatureInput] = useState("");
   const [features, setFeatures] = useState<string[]>(product?.features ?? []);
+  const [whatsIncludedInput, setWhatsIncludedInput] = useState("");
+  const [whatsIncluded, setWhatsIncluded] = useState<string[]>(product?.whatsIncluded ?? []);
+  const [videoUrl, setVideoUrl] = useState(product?.videoUrl ?? "");
+  const [version, setVersion] = useState(product?.version ?? "");
+  const [changelog, setChangelog] = useState(product?.changelog ?? "");
+  const [supportUrl, setSupportUrl] = useState(product?.supportUrl ?? "");
+  const [documentationUrl, setDocumentationUrl] = useState(product?.documentationUrl ?? "");
+  const [publishedAt, setPublishedAt] = useState(product?.publishedAt?.split("T")[0] ?? "");
   const [isActive, setIsActive] = useState(product?.isActive ?? true);
   const [isFeatured, setIsFeatured] = useState(product?.isFeatured ?? false);
   const [saving, setSaving] = useState(false);
@@ -59,6 +69,31 @@ export function ProductForm({ product }: ProductFormProps) {
     setter("");
   }
 
+  async function addGalleryImage(file: File) {
+    if (!file.type.startsWith("image/")) {
+      toast("Please select an image file", "error");
+      return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      toast("File must be under 10 MB", "error");
+      return;
+    }
+    setUploadingGallery(true);
+    try {
+      const uploaded = await adminUpload<{ url: string }>(file, "products");
+      setImages((prev) => [...prev, uploaded.url]);
+      toast("Image added", "success");
+    } catch {
+      toast("Failed to upload image", "error");
+    } finally {
+      setUploadingGallery(false);
+    }
+  }
+
+  function removeGalleryImage(index: number) {
+    setImages((prev) => prev.filter((_, i) => i !== index));
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setSaving(true);
@@ -75,8 +110,16 @@ export function ProductForm({ product }: ProductFormProps) {
       previewUrl: previewUrl || undefined,
       downloadUrl: downloadUrl || undefined,
       thumbnailUrl: thumbnailUrl || undefined,
+      images,
       technologies,
       features,
+      videoUrl: videoUrl || undefined,
+      whatsIncluded,
+      version: version || undefined,
+      changelog: changelog || undefined,
+      supportUrl: supportUrl || undefined,
+      documentationUrl: documentationUrl || undefined,
+      publishedAt: publishedAt || undefined,
       isActive,
       isFeatured,
     };
@@ -109,19 +152,73 @@ export function ProductForm({ product }: ProductFormProps) {
             <FormField as="textarea" label="Long Description" value={longDescription} onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setLongDescription(e.target.value)} rows={6} placeholder="Detailed description" />
           </div>
 
-          {/* URLs */}
+          {/* Media */}
           <div className="glass rounded-2xl p-5 space-y-4">
-            <h3 className="text-sm font-semibold text-foreground">URLs</h3>
+            <h3 className="text-sm font-semibold text-foreground">Media</h3>
             <ImageUpload
               label="Thumbnail"
               value={thumbnailUrl}
               onChange={setThumbnailUrl}
               folder="products"
               aspectClass="aspect-video"
-              hint="Recommended: 800×450px"
+              hint="Recommended: 800x450px"
             />
+            <FormField label="Video URL" value={videoUrl} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setVideoUrl(e.target.value)} placeholder="https://youtube.com/watch?v=..." />
+          </div>
+
+          {/* Gallery Images */}
+          <div className="glass rounded-2xl p-5 space-y-4">
+            <h3 className="text-sm font-semibold text-foreground">Gallery Screenshots</h3>
+            {images.length > 0 && (
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                {images.map((url, i) => (
+                  <div key={i} className="group relative aspect-video overflow-hidden rounded-xl bg-muted">
+                    <img src={url} alt={`Screenshot ${i + 1}`} className="h-full w-full object-cover" />
+                    <button
+                      type="button"
+                      onClick={() => removeGalleryImage(i)}
+                      className="absolute right-1 top-1 flex h-6 w-6 items-center justify-center rounded-full bg-destructive text-xs text-white opacity-0 transition-opacity group-hover:opacity-100"
+                    >
+                      &times;
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+            <label
+              className={`flex cursor-pointer items-center justify-center gap-2 rounded-xl border-2 border-dashed border-foreground/10 px-4 py-3 text-sm transition-colors hover:border-primary-400/40 ${uploadingGallery ? "pointer-events-none opacity-60" : ""}`}
+            >
+              <input
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) addGalleryImage(file);
+                  e.target.value = "";
+                }}
+              />
+              {uploadingGallery ? (
+                <span className="text-muted-foreground">Uploading...</span>
+              ) : (
+                <>
+                  <svg className="h-5 w-5 text-muted-foreground/50" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+                  </svg>
+                  <span className="font-medium text-muted-foreground">Upload screenshot</span>
+                </>
+              )}
+            </label>
+            <p className="text-xs text-muted-foreground">Up to 20 images. Recommended: 1200x800px.</p>
+          </div>
+
+          {/* URLs */}
+          <div className="glass rounded-2xl p-5 space-y-4">
+            <h3 className="text-sm font-semibold text-foreground">URLs</h3>
             <FormField label="Preview URL" value={previewUrl} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPreviewUrl(e.target.value)} placeholder="https://..." />
             <FormField label="Download URL" value={downloadUrl} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setDownloadUrl(e.target.value)} placeholder="https://..." />
+            <FormField label="Support URL" value={supportUrl} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSupportUrl(e.target.value)} placeholder="https://..." />
+            <FormField label="Documentation URL" value={documentationUrl} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setDocumentationUrl(e.target.value)} placeholder="https://docs.example.com/..." />
           </div>
 
           {/* Tags */}
@@ -153,6 +250,27 @@ export function ProductForm({ product }: ProductFormProps) {
                 </span>
               ))}
             </div>
+
+            <h3 className="text-sm font-semibold text-foreground">What&apos;s Included</h3>
+            <div className="flex gap-2">
+              <input value={whatsIncludedInput} onChange={(e) => setWhatsIncludedInput(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addTag(whatsIncludedInput, setWhatsIncludedInput, whatsIncluded, setWhatsIncluded); } }} className="glass-subtle flex-1 rounded-xl px-4 py-2 text-sm text-foreground outline-none focus:ring-2 focus:ring-primary-500/30" placeholder="e.g. React source code, Figma files..." />
+              <button type="button" onClick={() => addTag(whatsIncludedInput, setWhatsIncludedInput, whatsIncluded, setWhatsIncluded)} className="btn-glass-secondary rounded-xl px-4 py-2 text-sm font-medium">Add</button>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {whatsIncluded.map((item) => (
+                <span key={item} className="glass-subtle inline-flex items-center gap-1 rounded-lg px-2.5 py-1 text-xs font-medium text-foreground">
+                  {item}
+                  <button type="button" onClick={() => setWhatsIncluded(whatsIncluded.filter((x) => x !== item))} className="text-muted-foreground hover:text-destructive">&times;</button>
+                </span>
+              ))}
+            </div>
+          </div>
+
+          {/* Version & Changelog */}
+          <div className="glass rounded-2xl p-5 space-y-4">
+            <h3 className="text-sm font-semibold text-foreground">Version &amp; Changelog</h3>
+            <FormField label="Version" value={version} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setVersion(e.target.value)} placeholder="e.g. 2.1.0" />
+            <FormField as="textarea" label="Changelog" value={changelog} onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setChangelog(e.target.value)} rows={6} placeholder={"## v2.1.0\n- Added dark mode\n- Fixed responsive issues"} />
           </div>
         </div>
 
@@ -177,6 +295,7 @@ export function ProductForm({ product }: ProductFormProps) {
               <option value="COMMERCIAL">Commercial</option>
               <option value="EXTENDED">Extended</option>
             </FormField>
+            <FormField label="Published At" type="date" value={publishedAt} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPublishedAt(e.target.value)} />
           </div>
 
           <div className="glass rounded-2xl p-5 space-y-3">
