@@ -5,13 +5,12 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useGSAP } from "@gsap/react";
 import { gsap, DURATION_ENTRY, STAGGER_DELAY, GSAP_EASE } from "@/lib/gsap";
-import { adminGet, adminDelete, adminPatch, revalidateCache } from "@/lib/admin-api";
+import { adminGet, adminDelete, revalidateCache } from "@/lib/admin-api";
 import { PageHeader } from "@/components/dashboard/page-header";
 import { DataTable, type Column } from "@/components/dashboard/data-table";
 import { StatusBadge } from "@/components/dashboard/status-badge";
 import { Pagination } from "@/components/dashboard/pagination";
 import { ConfirmDialog } from "@/components/dashboard/confirm-dialog";
-import { Modal } from "@/components/dashboard/modal";
 import { LoadingState } from "@/components/dashboard/loading-state";
 import { FilterTabs } from "@/components/dashboard/filter-tabs";
 import { useToast } from "@/components/dashboard/toast-context";
@@ -19,9 +18,6 @@ import type { AdminPost } from "@/types/admin";
 import type { PaginatedResult } from "@/types/api";
 
 const TABS = ["All", "DRAFT", "PUBLISHED", "SCHEDULED", "ARCHIVED"] as const;
-
-const inputClass =
-  "glass-subtle w-full rounded-xl px-4 py-2.5 text-sm text-foreground outline-none focus:ring-2 focus:ring-primary-500/30 placeholder:text-muted-foreground";
 
 export default function BlogPage() {
   const router = useRouter();
@@ -33,43 +29,6 @@ export default function BlogPage() {
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
-
-  /* ── Edit modal ── */
-  const [editItem, setEditItem] = useState<AdminPost | null>(null);
-  const [editTitle, setEditTitle] = useState("");
-  const [editSlug, setEditSlug] = useState("");
-  const [editStatus, setEditStatus] = useState<string>("DRAFT");
-  const [editExcerpt, setEditExcerpt] = useState("");
-  const [editIsFeatured, setEditIsFeatured] = useState(false);
-  const [updating, setUpdating] = useState(false);
-
-  function openEdit(post: AdminPost) {
-    setEditItem(post);
-    setEditTitle(post.title);
-    setEditSlug(post.slug);
-    setEditStatus(post.status);
-    setEditExcerpt(post.excerpt ?? "");
-    setEditIsFeatured(post.isFeatured);
-  }
-
-  async function handleEdit() {
-    if (!editItem) return;
-    setUpdating(true);
-    try {
-      await adminPatch(`/blog/posts/${editItem.id}`, {
-        title: editTitle.trim(),
-        slug: editSlug.trim(),
-        status: editStatus,
-        excerpt: editExcerpt.trim() || undefined,
-        isFeatured: editIsFeatured,
-      });
-      await revalidateCache("posts");
-      toast("Post updated", "success");
-      setEditItem(null);
-      fetchData();
-    } catch { toast("Failed to update", "error"); }
-    finally { setUpdating(false); }
-  }
 
   const columns: Column<AdminPost>[] = [
     { key: "title", label: "Title", sortable: true },
@@ -89,8 +48,7 @@ export default function BlogPage() {
       key: "actions", label: "",
       render: (r) => (
         <div className="flex items-center gap-2">
-          <Link href={`/dashboard/blog/${r.id}/edit`} onClick={(e) => e.stopPropagation()} className="cursor-pointer text-xs font-medium text-primary-600 hover:text-primary-500">Edit</Link>
-          <button onClick={(e) => { e.stopPropagation(); openEdit(r); }} className="cursor-pointer text-xs font-medium text-muted-foreground hover:text-foreground">Quick</button>
+          <button onClick={(e) => { e.stopPropagation(); router.push(`/dashboard/blog/${r.id}/edit`); }} className="cursor-pointer text-xs font-medium text-primary-600 hover:text-primary-500">Edit</button>
           <button onClick={(e) => { e.stopPropagation(); setDeleteId(r.id); }} className="cursor-pointer text-xs font-medium text-destructive hover:text-destructive/80">Delete</button>
         </div>
       ),
@@ -150,42 +108,6 @@ export default function BlogPage() {
 
       <ConfirmDialog open={!!deleteId} onClose={() => setDeleteId(null)} onConfirm={handleDelete} title="Delete Post" message="Are you sure you want to delete this post? This action cannot be undone." loading={deleting} />
 
-      <Modal open={!!editItem} onClose={() => setEditItem(null)} title="Edit Post" footer={
-        <>
-          <button onClick={() => setEditItem(null)} className="btn-glass-secondary rounded-xl px-4 py-2 text-sm font-medium">Cancel</button>
-          <button onClick={handleEdit} disabled={updating || !editTitle.trim()} className="btn-glass-primary rounded-xl px-4 py-2 text-sm font-semibold text-white disabled:opacity-50">
-            {updating ? "Saving..." : "Save Changes"}
-          </button>
-        </>
-      }>
-        <div className="space-y-3">
-          <div>
-            <label className="mb-1 block text-xs font-medium text-muted-foreground">Title *</label>
-            <input type="text" value={editTitle} onChange={(e) => setEditTitle(e.target.value)} className={inputClass} placeholder="Post title" />
-          </div>
-          <div>
-            <label className="mb-1 block text-xs font-medium text-muted-foreground">Slug</label>
-            <input type="text" value={editSlug} onChange={(e) => setEditSlug(e.target.value)} className={inputClass} placeholder="post-slug" />
-          </div>
-          <div>
-            <label className="mb-1 block text-xs font-medium text-muted-foreground">Status</label>
-            <select value={editStatus} onChange={(e) => setEditStatus(e.target.value)} className={inputClass}>
-              <option value="DRAFT">Draft</option>
-              <option value="PUBLISHED">Published</option>
-              <option value="SCHEDULED">Scheduled</option>
-              <option value="ARCHIVED">Archived</option>
-            </select>
-          </div>
-          <div>
-            <label className="mb-1 block text-xs font-medium text-muted-foreground">Excerpt</label>
-            <textarea value={editExcerpt} onChange={(e) => setEditExcerpt(e.target.value)} rows={3} className={`${inputClass} resize-none`} placeholder="Brief summary..." />
-          </div>
-          <label className="flex items-center gap-3">
-            <input type="checkbox" checked={editIsFeatured} onChange={(e) => setEditIsFeatured(e.target.checked)} className="h-4 w-4 rounded border-foreground/20 text-primary-600 focus:ring-primary-500/30" />
-            <span className="text-sm font-medium text-foreground">Featured post</span>
-          </label>
-        </div>
-      </Modal>
     </div>
   );
 }

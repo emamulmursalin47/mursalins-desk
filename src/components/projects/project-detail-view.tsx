@@ -96,7 +96,11 @@ export function ProjectDetailView({
   const hasImages = project.images && project.images.length > 0;
   const hasMilestones = project.milestones && project.milestones.length > 0;
   const hasLinks = project.liveUrl || project.repositoryUrl;
-  const hasMetrics = project.metrics && project.metrics.length > 0;
+  const validMetrics = (project.metrics ?? []).filter(
+    (m): m is { label: string; value: string; description?: string } =>
+      !!m && typeof m === "object" && "label" in m && "value" in m,
+  );
+  const hasMetrics = validMetrics.length > 0;
   const hasFeatures = project.features && project.features.length > 0;
   const hasChallenges = project.challenges && project.challenges.length > 0;
   const hasBadges = project.qualityBadges && project.qualityBadges.length > 0;
@@ -104,7 +108,8 @@ export function ProjectDetailView({
     project.role ||
     project.clientName ||
     project.teamSize ||
-    (project.startDate && project.endDate);
+    project.startDate ||
+    project.endDate;
 
   const sortedMilestones = hasMilestones
     ? [...project.milestones].sort((a, b) => a.sortOrder - b.sortOrder)
@@ -297,7 +302,7 @@ export function ProjectDetailView({
               ref={metricsRef}
               className="grid grid-cols-2 gap-3 sm:gap-6 md:grid-cols-3 lg:grid-cols-4"
             >
-              {project.metrics!.map((metric, i) => (
+              {validMetrics.map((metric, i) => (
                 <div
                   key={i}
                   className="glass-card glass-shine rounded-xl p-4 text-center sm:rounded-2xl sm:p-6"

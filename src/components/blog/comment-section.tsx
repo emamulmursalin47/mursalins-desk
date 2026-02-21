@@ -128,7 +128,7 @@ export function CommentSection({ postSlug }: CommentSectionProps) {
         <button
           type="submit"
           disabled={!name.trim() || !content.trim()}
-          className="btn-glass-primary rounded-xl px-6 py-2.5 text-sm font-medium disabled:cursor-not-allowed disabled:opacity-40"
+          className="btn-glass-primary rounded-xl px-6 py-2.5 text-sm font-medium text-white disabled:cursor-not-allowed disabled:opacity-40"
         >
           Post Comment
         </button>
