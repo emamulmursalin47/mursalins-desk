@@ -98,11 +98,26 @@ export function ProjectDetailView({
   const hasLinks = project.liveUrl || project.repositoryUrl;
   const validMetrics = (project.metrics ?? []).filter(
     (m): m is { label: string; value: string; description?: string } =>
-      !!m && typeof m === "object" && "label" in m && "value" in m,
+      !!m &&
+      typeof m === "object" &&
+      !Array.isArray(m) &&
+      "label" in m &&
+      "value" in m &&
+      !!(m as { label: string }).label &&
+      !!(m as { value: string }).value,
   );
   const hasMetrics = validMetrics.length > 0;
   const hasFeatures = project.features && project.features.length > 0;
-  const hasChallenges = project.challenges && project.challenges.length > 0;
+  const validChallenges = (project.challenges ?? []).filter(
+    (c): c is { challenge: string; solution: string } =>
+      !!c &&
+      typeof c === "object" &&
+      !Array.isArray(c) &&
+      "challenge" in c &&
+      "solution" in c &&
+      !!(c as { challenge: string }).challenge,
+  );
+  const hasChallenges = validChallenges.length > 0;
   const hasBadges = project.qualityBadges && project.qualityBadges.length > 0;
   const hasMetaRow =
     project.role ||
@@ -458,7 +473,7 @@ export function ProjectDetailView({
               Challenges &amp; Solutions
             </h2>
             <div ref={challengesRef} className="space-y-3 sm:space-y-4">
-              {project.challenges!.map((item, i) => (
+              {validChallenges.map((item, i) => (
                 <div
                   key={i}
                   className="glass-card glass-shine rounded-xl p-4 sm:rounded-2xl sm:p-6"

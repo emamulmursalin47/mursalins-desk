@@ -82,15 +82,23 @@ export function ProjectForm({ project }: ProjectFormProps) {
     project?.features ?? [],
   );
 
-  // Metrics (dynamic rows)
+  // Metrics (dynamic rows) — filter out malformed entries from API
   const [metrics, setMetrics] = useState<{ label: string; value: string }[]>(
-    (project?.metrics as { label: string; value: string }[]) ?? [],
+    ((project?.metrics ?? []) as unknown[]).filter(
+      (m): m is { label: string; value: string } =>
+        !!m && typeof m === "object" && !Array.isArray(m) && "label" in m && "value" in m,
+    ),
   );
 
-  // Challenges (dynamic rows)
+  // Challenges (dynamic rows) — filter out malformed entries from API
   const [challengesList, setChallengesList] = useState<
     { challenge: string; solution: string }[]
-  >((project?.challenges as { challenge: string; solution: string }[]) ?? []);
+  >(
+    ((project?.challenges ?? []) as unknown[]).filter(
+      (c): c is { challenge: string; solution: string } =>
+        !!c && typeof c === "object" && !Array.isArray(c) && "challenge" in c && "solution" in c,
+    ),
+  );
 
   // Quality badges (checkboxes)
   const [qualityBadges, setQualityBadges] = useState<string[]>(
@@ -108,6 +116,9 @@ export function ProjectForm({ project }: ProjectFormProps) {
   // Images
   const [images, setImages] = useState(project?.images ?? []);
   const [uploadingGallery, setUploadingGallery] = useState(false);
+  const [pendingGalleryFiles, setPendingGalleryFiles] = useState<
+    { file: File; preview: string }[]
+  >([]);
 
   const [saving, setSaving] = useState(false);
   const [autoSlug, setAutoSlug] = useState(!isEdit);
@@ -154,7 +165,21 @@ export function ProjectForm({ project }: ProjectFormProps) {
         await adminPatch(`/projects/${project.id}`, body);
         toast("Project updated", "success");
       } else {
-        await adminPost("/projects", body);
+        const created = await adminPost<{ id: string }>("/projects", body);
+
+        // Upload queued gallery images after creation
+        if (pendingGalleryFiles.length > 0 && created?.id) {
+          for (const { file } of pendingGalleryFiles) {
+            try {
+              const uploaded = await adminUpload<{ url: string }>(file, "projects");
+              await adminPost(`/projects/${created.id}/images`, { url: uploaded.url });
+            } catch {
+              // Continue uploading remaining images even if one fails
+            }
+          }
+          setPendingGalleryFiles([]);
+        }
+
         toast("Project created", "success");
       }
       await revalidateCache("projects");
@@ -194,7 +219,6 @@ export function ProjectForm({ project }: ProjectFormProps) {
   }
 
   async function addGalleryImage(file: File) {
-    if (!isEdit) return;
     if (!file.type.startsWith("image/")) {
       toast("Please select an image file", "error");
       return;
@@ -203,6 +227,14 @@ export function ProjectForm({ project }: ProjectFormProps) {
       toast("File must be under 10 MB", "error");
       return;
     }
+
+    if (!isEdit) {
+      // Queue file for upload after project creation
+      const preview = URL.createObjectURL(file);
+      setPendingGalleryFiles((prev) => [...prev, { file, preview }]);
+      return;
+    }
+
     setUploadingGallery(true);
     try {
       const uploaded = await adminUpload<{ url: string }>(file, "projects");
@@ -820,61 +852,81 @@ export function ProjectForm({ project }: ProjectFormProps) {
             </div>
           )}
 
-          {/* Images (only in edit mode) */}
-          {isEdit && (
-            <div className="glass rounded-2xl p-5 space-y-4">
-              <h3 className="text-sm font-semibold text-foreground">
-                Gallery Images
-              </h3>
-              {images.length > 0 && (
-                <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-                  {images.map((img) => (
-                    <div
-                      key={img.id}
-                      className="group relative aspect-video overflow-hidden rounded-xl bg-muted"
+          {/* Gallery Images */}
+          <div className="glass rounded-2xl p-5 space-y-4">
+            <h3 className="text-sm font-semibold text-foreground">
+              Gallery Images
+            </h3>
+            {(images.length > 0 || pendingGalleryFiles.length > 0) && (
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                {images.map((img) => (
+                  <div
+                    key={img.id}
+                    className="group relative aspect-video overflow-hidden rounded-xl bg-muted"
+                  >
+                    <img
+                      src={img.url}
+                      alt={img.altText ?? ""}
+                      className="h-full w-full object-cover"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => removeImage(img.id)}
+                      className="absolute right-1 top-1 flex h-6 w-6 items-center justify-center rounded-full bg-destructive text-xs text-white opacity-0 transition-opacity group-hover:opacity-100"
                     >
-                      <img
-                        src={img.url}
-                        alt={img.altText ?? ""}
-                        className="h-full w-full object-cover"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => removeImage(img.id)}
-                        className="absolute right-1 top-1 flex h-6 w-6 items-center justify-center rounded-full bg-destructive text-xs text-white opacity-0 transition-opacity group-hover:opacity-100"
-                      >
-                        &times;
-                      </button>
-                    </div>
-                  ))}
-                </div>
+                      &times;
+                    </button>
+                  </div>
+                ))}
+                {pendingGalleryFiles.map((p, i) => (
+                  <div
+                    key={`pending-${i}`}
+                    className="group relative aspect-video overflow-hidden rounded-xl bg-muted"
+                  >
+                    <img
+                      src={p.preview}
+                      alt=""
+                      className="h-full w-full object-cover"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        URL.revokeObjectURL(p.preview);
+                        setPendingGalleryFiles((prev) => prev.filter((_, j) => j !== i));
+                      }}
+                      className="absolute right-1 top-1 flex h-6 w-6 items-center justify-center rounded-full bg-destructive text-xs text-white opacity-0 transition-opacity group-hover:opacity-100"
+                    >
+                      &times;
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+            <label
+              className={`flex cursor-pointer items-center justify-center gap-2 rounded-xl border-2 border-dashed border-foreground/10 px-4 py-3 text-sm transition-colors hover:border-primary-400/40 ${uploadingGallery ? "pointer-events-none opacity-60" : ""}`}
+            >
+              <input
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) addGalleryImage(file);
+                  e.target.value = "";
+                }}
+              />
+              {uploadingGallery ? (
+                <span className="text-muted-foreground">Uploading...</span>
+              ) : (
+                <>
+                  <svg className="h-5 w-5 text-muted-foreground/50" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+                  </svg>
+                  <span className="font-medium text-muted-foreground">Upload image</span>
+                </>
               )}
-              <label
-                className={`flex cursor-pointer items-center justify-center gap-2 rounded-xl border-2 border-dashed border-foreground/10 px-4 py-3 text-sm transition-colors hover:border-primary-400/40 ${uploadingGallery ? "pointer-events-none opacity-60" : ""}`}
-              >
-                <input
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  onChange={(e) => {
-                    const file = e.target.files?.[0];
-                    if (file) addGalleryImage(file);
-                    e.target.value = "";
-                  }}
-                />
-                {uploadingGallery ? (
-                  <span className="text-muted-foreground">Uploading...</span>
-                ) : (
-                  <>
-                    <svg className="h-5 w-5 text-muted-foreground/50" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
-                    </svg>
-                    <span className="font-medium text-muted-foreground">Upload image</span>
-                  </>
-                )}
-              </label>
-            </div>
-          )}
+            </label>
+          </div>
         </div>
 
         {/* Sidebar */}
