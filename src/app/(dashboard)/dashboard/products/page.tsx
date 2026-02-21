@@ -28,8 +28,8 @@ export default function ProductsPage() {
   const columns: Column<AdminProduct>[] = [
     { key: "name", label: "Name", sortable: true },
     {
-      key: "type", label: "Type",
-      render: (r) => <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">{r.type.replace(/_/g, " ")}</span>,
+      key: "productTypeId", label: "Type",
+      render: (r) => <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">{r.productType?.name ?? "Other"}</span>,
     },
     {
       key: "price", label: "Price", sortable: true,

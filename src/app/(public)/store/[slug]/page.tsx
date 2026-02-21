@@ -58,7 +58,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
       getProductReviews(product.id).catch(() => null),
     ]);
     relatedProducts = allProducts.data
-      .filter((p) => p.id !== product.id && p.type === product.type)
+      .filter((p) => p.id !== product.id && p.productTypeId === product.productTypeId)
       .slice(0, 3);
     reviews = reviewsResult?.data ?? [];
   } catch {

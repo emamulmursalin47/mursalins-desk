@@ -4,15 +4,6 @@ import Image from "next/image";
 import Link from "next/link";
 import type { Product } from "@/types/api";
 
-const typeLabels: Record<string, string> = {
-  TEMPLATE: "Template",
-  COMPONENT: "Component",
-  FULL_APPLICATION: "Full App",
-  PLUGIN: "Plugin",
-  DESIGN_ASSET: "Design Asset",
-  OTHER: "Other",
-};
-
 export function ProductCard({ product }: { product: Product }) {
   const hasDiscount = product.salePrice !== null;
   const displayPrice = hasDiscount ? product.salePrice! : product.price;
@@ -52,7 +43,7 @@ export function ProductCard({ product }: { product: Product }) {
           {/* Type badge */}
           <div className="absolute top-3 left-3">
             <span className="inline-flex items-center rounded-full border border-primary-500/20 bg-primary-50/80 px-2.5 py-0.5 text-xs font-medium text-primary-600 backdrop-blur-sm">
-              {typeLabels[product.type] || product.type}
+              {product.productType?.name ?? "Other"}
             </span>
           </div>
         </div>

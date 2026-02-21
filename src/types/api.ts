@@ -26,13 +26,13 @@ export type ProjectStatus =
   | "COMPLETED"
   | "CANCELLED";
 
-export type ProductType =
-  | "TEMPLATE"
-  | "COMPONENT"
-  | "FULL_APPLICATION"
-  | "PLUGIN"
-  | "DESIGN_ASSET"
-  | "OTHER";
+export interface ProductType {
+  id: string;
+  name: string;
+  slug: string;
+  createdAt: string;
+  updatedAt: string;
+}
 
 export type LicenseType = "PERSONAL" | "COMMERCIAL" | "EXTENDED";
 
@@ -150,7 +150,8 @@ export interface Product {
   slug: string;
   description: string | null;
   longDescription: string | null;
-  type: ProductType;
+  productTypeId: string;
+  productType: ProductType;
   price: string;
   salePrice: string | null;
   currency: string;

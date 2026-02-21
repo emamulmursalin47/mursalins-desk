@@ -10,18 +10,9 @@ import {
   createStaggerFadeUp,
   createFadeUp,
 } from "@/lib/gsap";
-import type { Product, ProductType } from "@/types/api";
+import type { Product } from "@/types/api";
 import { Container } from "@/components/layout/container";
 import { ProductCard } from "./product-card";
-
-const typeLabels: Record<ProductType, string> = {
-  TEMPLATE: "Templates",
-  COMPONENT: "Components",
-  FULL_APPLICATION: "Full Apps",
-  PLUGIN: "Plugins",
-  DESIGN_ASSET: "Design Assets",
-  OTHER: "Other",
-};
 
 interface ProductsGridProps {
   products: Product[];
@@ -36,22 +27,24 @@ export function ProductsGrid({ products, meta }: ProductsGridProps) {
   const pillWave2Ref = useRef<HTMLSpanElement>(null);
   const isFirstPill = useRef(true);
   const gridRef = useRef<HTMLDivElement>(null);
-  const [activeType, setActiveType] = useState<ProductType | null>(null);
+  const [activeTypeId, setActiveTypeId] = useState<string | null>(null);
 
   const allTypes = useMemo(() => {
-    const counts = new Map<ProductType, number>();
+    const counts = new Map<string, { id: string; name: string; count: number }>();
     for (const p of products) {
-      counts.set(p.type, (counts.get(p.type) ?? 0) + 1);
+      const id = p.productType?.id ?? "other";
+      const name = p.productType?.name ?? "Other";
+      const entry = counts.get(id);
+      if (entry) entry.count++;
+      else counts.set(id, { id, name, count: 1 });
     }
-    return Array.from(counts.entries())
-      .sort((a, b) => b[1] - a[1])
-      .map(([type]) => type);
+    return Array.from(counts.values()).sort((a, b) => b.count - a.count);
   }, [products]);
 
   const filtered = useMemo(() => {
-    if (!activeType) return products;
-    return products.filter((p) => p.type === activeType);
-  }, [products, activeType]);
+    if (!activeTypeId) return products;
+    return products.filter((p) => (p.productType?.id ?? "other") === activeTypeId);
+  }, [products, activeTypeId]);
 
   // Sliding pill — measures active button and animates pill to it
   const updatePill = useCallback(() => {
@@ -126,7 +119,7 @@ export function ProductsGrid({ products, meta }: ProductsGridProps) {
 
   useEffect(() => {
     updatePill();
-  }, [activeType, updatePill]);
+  }, [activeTypeId, updatePill]);
 
   useEffect(() => {
     let raf: number;
@@ -176,30 +169,30 @@ export function ProductsGrid({ products, meta }: ProductsGridProps) {
               </div>
 
               <button
-                onClick={() => setActiveType(null)}
-                data-filter-active={!activeType ? "true" : "false"}
+                onClick={() => setActiveTypeId(null)}
+                data-filter-active={!activeTypeId ? "true" : "false"}
                 className={`relative rounded-full px-4 py-2 text-sm font-medium transition-colors duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/50 focus-visible:ring-offset-2 ${
-                  !activeType
+                  !activeTypeId
                     ? "text-primary-600"
                     : "text-muted-foreground hover:text-foreground"
                 }`}
               >
                 All Products
               </button>
-              {allTypes.map((type) => (
+              {allTypes.map((t) => (
                 <button
-                  key={type}
+                  key={t.id}
                   onClick={() =>
-                    setActiveType(activeType === type ? null : type)
+                    setActiveTypeId(activeTypeId === t.id ? null : t.id)
                   }
-                  data-filter-active={activeType === type ? "true" : "false"}
+                  data-filter-active={activeTypeId === t.id ? "true" : "false"}
                   className={`relative rounded-full px-4 py-2 text-sm font-medium transition-colors duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/50 focus-visible:ring-offset-2 ${
-                    activeType === type
+                    activeTypeId === t.id
                       ? "text-primary-600"
                       : "text-muted-foreground hover:text-foreground"
                   }`}
                 >
-                  {typeLabels[type]}
+                  {t.name}
                 </button>
               ))}
             </div>

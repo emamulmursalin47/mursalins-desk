@@ -2,11 +2,12 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { adminPost, adminPatch, adminUpload, revalidateCache } from "@/lib/admin-api";
+import { adminGet, adminPost, adminPatch, adminDelete, adminUpload, revalidateCache } from "@/lib/admin-api";
 import { FormField } from "@/components/dashboard/form-field";
 import { ImageUpload } from "@/components/dashboard/image-upload";
 import { useToast } from "@/components/dashboard/toast-context";
 import type { AdminProduct } from "@/types/admin";
+import type { ProductType, PaginatedResult } from "@/types/api";
 
 interface ProductFormProps {
   product?: AdminProduct;
@@ -25,7 +26,11 @@ export function ProductForm({ product }: ProductFormProps) {
   const [slug, setSlug] = useState(product?.slug ?? "");
   const [description, setDescription] = useState(product?.description ?? "");
   const [longDescription, setLongDescription] = useState(product?.longDescription ?? "");
-  const [type, setType] = useState<string>(product?.type ?? "TEMPLATE");
+  const [productTypes, setProductTypes] = useState<ProductType[]>([]);
+  const [productTypeId, setProductTypeId] = useState(product?.productTypeId ?? "");
+  const [showNewType, setShowNewType] = useState(false);
+  const [newTypeName, setNewTypeName] = useState("");
+  const [creatingType, setCreatingType] = useState(false);
   const [price, setPrice] = useState(product?.price ?? "");
   const [salePrice, setSalePrice] = useState(product?.salePrice ?? "");
   const [currency, setCurrency] = useState(product?.currency ?? "USD");
@@ -55,6 +60,51 @@ export function ProductForm({ product }: ProductFormProps) {
   useEffect(() => {
     if (autoSlug && name) setSlug(toSlug(name));
   }, [name, autoSlug]);
+
+  useEffect(() => {
+    adminGet<PaginatedResult<ProductType>>("/product-types?limit=100")
+      .then((res) => {
+        setProductTypes(res.data);
+        if (!product && res.data.length > 0 && !productTypeId) {
+          setProductTypeId(res.data[0]!.id);
+        }
+      })
+      .catch(() => {});
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  async function handleCreateType() {
+    if (!newTypeName.trim()) return;
+    setCreatingType(true);
+    try {
+      const created = await adminPost<ProductType>("/product-types", { name: newTypeName.trim() });
+      setProductTypes((prev) => [...prev, created].sort((a, b) => a.name.localeCompare(b.name)));
+      setProductTypeId(created.id);
+      setNewTypeName("");
+      setShowNewType(false);
+      toast("Type created", "success");
+    } catch (err) {
+      toast(err instanceof Error ? err.message : "Failed to create type", "error");
+    } finally {
+      setCreatingType(false);
+    }
+  }
+
+  async function handleDeleteType(id: string) {
+    try {
+      await adminDelete(`/product-types/${id}`);
+      setProductTypes((prev) => prev.filter((t) => t.id !== id));
+      if (productTypeId === id) {
+        setProductTypeId((prev) => {
+          const remaining = productTypes.filter((t) => t.id !== id);
+          return remaining[0]?.id ?? prev;
+        });
+      }
+      toast("Type deleted", "success");
+    } catch (err) {
+      toast(err instanceof Error ? err.message : "Cannot delete type in use", "error");
+    }
+  }
 
   function addTag(
     value: string,
@@ -102,7 +152,7 @@ export function ProductForm({ product }: ProductFormProps) {
       name,
       description: description || undefined,
       longDescription: longDescription || undefined,
-      type,
+      productTypeId,
       price: Number(price),
       salePrice: salePrice ? Number(salePrice) : undefined,
       currency,
@@ -277,14 +327,68 @@ export function ProductForm({ product }: ProductFormProps) {
         {/* Sidebar */}
         <div className="space-y-5">
           <div className="glass rounded-2xl p-5 space-y-4">
-            <FormField as="select" label="Type" value={type} onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setType(e.target.value)}>
-              <option value="TEMPLATE">Template</option>
-              <option value="COMPONENT">Component</option>
-              <option value="FULL_APPLICATION">Full Application</option>
-              <option value="PLUGIN">Plugin</option>
-              <option value="DESIGN_ASSET">Design Asset</option>
-              <option value="OTHER">Other</option>
-            </FormField>
+            {/* Dynamic Product Type */}
+            <div>
+              <div className="mb-1 flex items-center justify-between">
+                <label className="text-sm font-medium text-foreground">Type</label>
+                <button
+                  type="button"
+                  onClick={() => setShowNewType(!showNewType)}
+                  className="flex h-5 w-5 items-center justify-center rounded-full bg-primary-500/10 text-primary-500 hover:bg-primary-500/20 transition-colors"
+                  title="Add new type"
+                >
+                  <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+                  </svg>
+                </button>
+              </div>
+              {showNewType && (
+                <div className="mb-2 flex gap-2">
+                  <input
+                    value={newTypeName}
+                    onChange={(e) => setNewTypeName(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); handleCreateType(); } }}
+                    className="glass-subtle flex-1 rounded-xl px-3 py-2 text-sm text-foreground outline-none focus:ring-2 focus:ring-primary-500/30 placeholder:text-muted-foreground"
+                    placeholder="New type name..."
+                    disabled={creatingType}
+                  />
+                  <button
+                    type="button"
+                    onClick={handleCreateType}
+                    disabled={creatingType || !newTypeName.trim()}
+                    className="btn-glass-primary rounded-xl px-3 py-2 text-xs font-medium text-white disabled:opacity-50"
+                  >
+                    {creatingType ? "..." : "Add"}
+                  </button>
+                </div>
+              )}
+              <select
+                value={productTypeId}
+                onChange={(e) => setProductTypeId(e.target.value)}
+                className="glass-subtle w-full rounded-xl px-4 py-2.5 text-sm text-foreground outline-none transition-all focus:ring-2 focus:ring-primary-500/30"
+              >
+                {productTypes.map((pt) => (
+                  <option key={pt.id} value={pt.id}>{pt.name}</option>
+                ))}
+              </select>
+              {productTypes.length > 0 && (
+                <div className="mt-2 flex flex-wrap gap-1.5">
+                  {productTypes.map((pt) => (
+                    <span key={pt.id} className="glass-subtle inline-flex items-center gap-1 rounded-lg px-2 py-0.5 text-[11px] text-muted-foreground">
+                      {pt.name}
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteType(pt.id)}
+                        className="text-muted-foreground hover:text-destructive transition-colors"
+                        title={`Delete ${pt.name}`}
+                      >
+                        &times;
+                      </button>
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <FormField label="Price" required type="number" step="0.01" value={price} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPrice(e.target.value)} placeholder="0.00" />
               <FormField label="Sale Price" type="number" step="0.01" value={salePrice} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSalePrice(e.target.value)} placeholder="0.00" />

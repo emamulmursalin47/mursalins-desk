@@ -180,7 +180,8 @@ export interface AdminProduct {
   slug: string;
   description: string | null;
   longDescription: string | null;
-  type: import("./api").ProductType;
+  productTypeId: string;
+  productType: import("./api").ProductType;
   price: string;
   salePrice: string | null;
   currency: string;

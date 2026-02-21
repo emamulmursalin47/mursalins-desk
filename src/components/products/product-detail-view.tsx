@@ -9,22 +9,13 @@ import {
   createStaggerFadeUp,
   createFadeIn,
 } from "@/lib/gsap";
-import type { Product, ProductType, LicenseType, Review } from "@/types/api";
+import type { Product, LicenseType, Review } from "@/types/api";
 import { Container } from "@/components/layout/container";
 import { ProductCard } from "./product-card";
 import { ProductReviews } from "./product-reviews";
 import { ReviewForm } from "./review-form";
 
 /* ─── Config ─── */
-
-const typeLabels: Record<ProductType, string> = {
-  TEMPLATE: "Template",
-  COMPONENT: "Component",
-  FULL_APPLICATION: "Full Application",
-  PLUGIN: "Plugin",
-  DESIGN_ASSET: "Design Asset",
-  OTHER: "Other",
-};
 
 const licenseLabels: Record<LicenseType, string> = {
   PERSONAL: "Personal License",
@@ -200,7 +191,7 @@ export function ProductDetailView({
             {/* Badges row */}
             <div className="flex flex-wrap items-center gap-2" data-animate>
               <span className="inline-flex items-center rounded-full border border-primary-500/20 bg-primary-50 px-2.5 py-0.5 text-xs font-medium text-primary-600 sm:px-3 sm:py-1 sm:text-sm">
-                {typeLabels[product.type]}
+                {product.productType?.name ?? "Other"}
               </span>
               <span className="inline-flex items-center rounded-full border border-foreground/10 bg-muted px-2.5 py-0.5 text-xs font-medium text-muted-foreground sm:px-3 sm:py-1 sm:text-sm">
                 {licenseLabels[product.licenseType]}
