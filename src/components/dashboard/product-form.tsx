@@ -6,6 +6,8 @@ import { adminGet, adminPost, adminPatch, adminDelete, adminUpload, revalidateCa
 import { FormField } from "@/components/dashboard/form-field";
 import { ImageUpload } from "@/components/dashboard/image-upload";
 import { useToast } from "@/components/dashboard/toast-context";
+import { AiFieldButton } from "@/components/dashboard/ai-field-button";
+import { AiProductModal } from "@/components/dashboard/ai-product-modal";
 import type { AdminProduct } from "@/types/admin";
 import type { ProductType, PaginatedResult } from "@/types/api";
 
@@ -56,6 +58,7 @@ export function ProductForm({ product }: ProductFormProps) {
   const [isFeatured, setIsFeatured] = useState(product?.isFeatured ?? false);
   const [saving, setSaving] = useState(false);
   const [autoSlug, setAutoSlug] = useState(!isEdit);
+  const [aiModalOpen, setAiModalOpen] = useState(false);
 
   useEffect(() => {
     if (autoSlug && name) setSlug(toSlug(name));
@@ -196,10 +199,83 @@ export function ProductForm({ product }: ProductFormProps) {
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         <div className="space-y-5 lg:col-span-2">
           <div className="glass rounded-2xl p-5 space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-semibold text-foreground">Product Details</h3>
+              <button
+                type="button"
+                onClick={() => setAiModalOpen(true)}
+                className="inline-flex items-center gap-1.5 rounded-lg bg-primary-500/10 px-3 py-1.5 text-xs font-medium text-primary-600 hover:bg-primary-500/20 transition-colors"
+              >
+                <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d="M12 3l1.912 5.813a2 2 0 0 0 1.275 1.275L21 12l-5.813 1.912a2 2 0 0 0-1.275 1.275L12 21l-1.912-5.813a2 2 0 0 0-1.275-1.275L3 12l5.813-1.912a2 2 0 0 0 1.275-1.275L12 3z" /></svg>
+                Generate with AI
+              </button>
+            </div>
+
             <FormField label="Name" required value={name} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setName(e.target.value)} placeholder="Product name" />
             <FormField label="Slug" value={slug} onChange={(e: React.ChangeEvent<HTMLInputElement>) => { setSlug(e.target.value); setAutoSlug(false); }} placeholder="product-slug" />
-            <FormField as="textarea" label="Description" value={description} onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setDescription(e.target.value)} rows={3} placeholder="Short description" />
-            <FormField as="textarea" label="Long Description" value={longDescription} onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setLongDescription(e.target.value)} rows={6} placeholder="Detailed description" />
+
+            <div>
+              <div className="mb-1 flex items-center justify-between">
+                <label className="block text-sm font-medium text-foreground">Description</label>
+                <AiFieldButton
+                  label="Generate description"
+                  disabled={!name}
+                  onError={(msg) => toast(msg, "error")}
+                  onGenerate={async () => {
+                    const selectedType = productTypes.find((pt) => pt.id === productTypeId);
+                    const res = await adminPost<{ description: string }>("/products/ai/generate-description", {
+                      name,
+                      productType: selectedType?.name || undefined,
+                      technologies: technologies.length ? technologies : undefined,
+                      features: features.length ? features : undefined,
+                    });
+                    if (res.description) {
+                      setDescription(res.description);
+                      toast("Description generated", "success");
+                    }
+                  }}
+                />
+              </div>
+              <textarea
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                rows={3}
+                placeholder="Short description"
+                className="glass-subtle w-full resize-none rounded-xl px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary-500/30"
+              />
+            </div>
+
+            <div>
+              <div className="mb-1 flex items-center justify-between">
+                <label className="block text-sm font-medium text-foreground">Long Description</label>
+                <AiFieldButton
+                  label="Generate long description"
+                  disabled={!name}
+                  onError={(msg) => toast(msg, "error")}
+                  onGenerate={async () => {
+                    const selectedType = productTypes.find((pt) => pt.id === productTypeId);
+                    const res = await adminPost<{ longDescription: string }>("/products/ai/generate-long-description", {
+                      name,
+                      description: description || undefined,
+                      productType: selectedType?.name || undefined,
+                      technologies: technologies.length ? technologies : undefined,
+                      features: features.length ? features : undefined,
+                    });
+                    if (res.longDescription) {
+                      setLongDescription(res.longDescription);
+                      toast("Long description generated", "success");
+                    }
+                  }}
+                />
+              </div>
+              <textarea
+                value={longDescription}
+                onChange={(e) => setLongDescription(e.target.value)}
+                rows={6}
+                placeholder="Detailed description (HTML supported)"
+                className="glass-subtle w-full resize-none rounded-xl px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary-500/30"
+              />
+            </div>
           </div>
 
           {/* Media */}
@@ -273,7 +349,26 @@ export function ProductForm({ product }: ProductFormProps) {
 
           {/* Tags */}
           <div className="glass rounded-2xl p-5 space-y-4">
-            <h3 className="text-sm font-semibold text-foreground">Technologies</h3>
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-semibold text-foreground">Technologies</h3>
+              <AiFieldButton
+                label="Suggest technologies"
+                disabled={!name}
+                onError={(msg) => toast(msg, "error")}
+                onGenerate={async () => {
+                  const selectedType = productTypes.find((pt) => pt.id === productTypeId);
+                  const res = await adminPost<{ technologies: string[] }>("/products/ai/suggest-technologies", {
+                    name,
+                    description: description || undefined,
+                    productType: selectedType?.name || undefined,
+                  });
+                  if (res.technologies?.length) {
+                    setTechnologies(res.technologies);
+                    toast(`${res.technologies.length} technologies suggested`, "success");
+                  }
+                }}
+              />
+            </div>
             <div className="flex gap-2">
               <input value={techInput} onChange={(e) => setTechInput(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addTag(techInput, setTechInput, technologies, setTechnologies); } }} className="glass-subtle flex-1 rounded-xl px-4 py-2 text-sm text-foreground outline-none focus:ring-2 focus:ring-primary-500/30" placeholder="Add technology..." />
               <button type="button" onClick={() => addTag(techInput, setTechInput, technologies, setTechnologies)} className="btn-glass-secondary rounded-xl px-4 py-2 text-sm font-medium">Add</button>
@@ -287,7 +382,27 @@ export function ProductForm({ product }: ProductFormProps) {
               ))}
             </div>
 
-            <h3 className="text-sm font-semibold text-foreground">Features</h3>
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-semibold text-foreground">Features</h3>
+              <AiFieldButton
+                label="Suggest features"
+                disabled={!name}
+                onError={(msg) => toast(msg, "error")}
+                onGenerate={async () => {
+                  const selectedType = productTypes.find((pt) => pt.id === productTypeId);
+                  const res = await adminPost<{ features: string[] }>("/products/ai/suggest-features", {
+                    name,
+                    description: description || undefined,
+                    productType: selectedType?.name || undefined,
+                    technologies: technologies.length ? technologies : undefined,
+                  });
+                  if (res.features?.length) {
+                    setFeatures(res.features);
+                    toast(`${res.features.length} features suggested`, "success");
+                  }
+                }}
+              />
+            </div>
             <div className="flex gap-2">
               <input value={featureInput} onChange={(e) => setFeatureInput(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addTag(featureInput, setFeatureInput, features, setFeatures); } }} className="glass-subtle flex-1 rounded-xl px-4 py-2 text-sm text-foreground outline-none focus:ring-2 focus:ring-primary-500/30" placeholder="Add feature..." />
               <button type="button" onClick={() => addTag(featureInput, setFeatureInput, features, setFeatures)} className="btn-glass-secondary rounded-xl px-4 py-2 text-sm font-medium">Add</button>
@@ -301,7 +416,27 @@ export function ProductForm({ product }: ProductFormProps) {
               ))}
             </div>
 
-            <h3 className="text-sm font-semibold text-foreground">What&apos;s Included</h3>
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-semibold text-foreground">What&apos;s Included</h3>
+              <AiFieldButton
+                label="Suggest what's included"
+                disabled={!name}
+                onError={(msg) => toast(msg, "error")}
+                onGenerate={async () => {
+                  const selectedType = productTypes.find((pt) => pt.id === productTypeId);
+                  const res = await adminPost<{ whatsIncluded: string[] }>("/products/ai/suggest-whats-included", {
+                    name,
+                    description: description || undefined,
+                    productType: selectedType?.name || undefined,
+                    features: features.length ? features : undefined,
+                  });
+                  if (res.whatsIncluded?.length) {
+                    setWhatsIncluded(res.whatsIncluded);
+                    toast(`${res.whatsIncluded.length} items suggested`, "success");
+                  }
+                }}
+              />
+            </div>
             <div className="flex gap-2">
               <input value={whatsIncludedInput} onChange={(e) => setWhatsIncludedInput(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addTag(whatsIncludedInput, setWhatsIncludedInput, whatsIncluded, setWhatsIncluded); } }} className="glass-subtle flex-1 rounded-xl px-4 py-2 text-sm text-foreground outline-none focus:ring-2 focus:ring-primary-500/30" placeholder="e.g. React source code, Figma files..." />
               <button type="button" onClick={() => addTag(whatsIncludedInput, setWhatsIncludedInput, whatsIncluded, setWhatsIncluded)} className="btn-glass-secondary rounded-xl px-4 py-2 text-sm font-medium">Add</button>
@@ -418,6 +553,22 @@ export function ProductForm({ product }: ProductFormProps) {
           </button>
         </div>
       </div>
+
+      <AiProductModal
+        open={aiModalOpen}
+        onClose={() => setAiModalOpen(false)}
+        productName={name}
+        productType={productTypes.find((pt) => pt.id === productTypeId)?.name}
+        currentTechnologies={technologies}
+        onGenerated={(result) => {
+          if (result.description) setDescription(result.description);
+          if (result.longDescription) setLongDescription(result.longDescription);
+          if (result.features?.length) setFeatures(result.features);
+          if (result.technologies?.length) setTechnologies(result.technologies);
+          if (result.whatsIncluded?.length) setWhatsIncluded(result.whatsIncluded);
+          toast("Product listing generated with AI", "success");
+        }}
+      />
     </form>
   );
 }
