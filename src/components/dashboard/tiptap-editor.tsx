@@ -132,6 +132,7 @@ interface TipTapEditorProps {
   content: string;
   onChange: (html: string) => void;
   placeholder?: string;
+  onEditorReady?: (editor: Editor) => void;
 }
 
 const TEXT_COLORS = [
@@ -176,6 +177,7 @@ export function TipTapEditor({
   content,
   onChange,
   placeholder = "Write your content... (type / for commands)",
+  onEditorReady,
 }: TipTapEditorProps) {
   const editorWrapRef = useRef<HTMLDivElement>(null);
   const isInternalUpdate = useRef(false);
@@ -322,6 +324,11 @@ export function TipTapEditor({
       onChange(e.getHTML());
     },
   });
+
+  // Expose editor instance to parent
+  useEffect(() => {
+    if (editor && onEditorReady) onEditorReady(editor);
+  }, [editor, onEditorReady]);
 
   // Sync external content — only for reset/initial load, skip when change came from editor itself
   useEffect(() => {

@@ -7,6 +7,9 @@ import { FormField } from "@/components/dashboard/form-field";
 import { ImageUpload } from "@/components/dashboard/image-upload";
 import { TipTapEditor } from "@/components/dashboard/tiptap-editor";
 import { useToast } from "@/components/dashboard/toast-context";
+import { AiFieldButton } from "@/components/dashboard/ai-field-button";
+import { AiGenerateModal } from "@/components/dashboard/ai-generate-modal";
+import type { Editor } from "@tiptap/react";
 import type { AdminPost } from "@/types/admin";
 import type { Category, Tag } from "@/types/api";
 
@@ -57,6 +60,10 @@ export function PostForm({ post }: PostFormProps) {
   const [tags, setTags] = useState<Tag[]>([]);
   const [saving, setSaving] = useState(false);
   const [autoSlug, setAutoSlug] = useState(!isEdit);
+
+  // AI
+  const [aiModalOpen, setAiModalOpen] = useState(false);
+  const editorRef = useRef<Editor | null>(null);
 
   // Preview mode
   const [previewMode, setPreviewMode] = useState(false);
@@ -246,13 +253,49 @@ export function PostForm({ post }: PostFormProps) {
         {/* ── Main Content ── */}
         <div className="space-y-5 lg:col-span-2">
           <div className="glass rounded-2xl p-5 space-y-4">
-            <FormField
-              label="Title"
-              required
-              value={title}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setTitle(e.target.value)}
-              placeholder="Post title"
-            />
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-semibold text-foreground">Post Content</h3>
+              <button
+                type="button"
+                onClick={() => setAiModalOpen(true)}
+                className="inline-flex items-center gap-1.5 rounded-lg bg-primary-500/10 px-3 py-1.5 text-xs font-medium text-primary-600 hover:bg-primary-500/20 transition-colors"
+              >
+                <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d="M12 3l1.912 5.813a2 2 0 0 0 1.275 1.275L21 12l-5.813 1.912a2 2 0 0 0-1.275 1.275L12 21l-1.912-5.813a2 2 0 0 0-1.275-1.275L3 12l5.813-1.912a2 2 0 0 0 1.275-1.275L12 3z" /></svg>
+                Generate with AI
+              </button>
+            </div>
+
+            <div>
+              <div className="mb-1 flex items-center justify-between">
+                <label className="block text-sm font-medium text-foreground">
+                  Title<span className="ml-0.5 text-destructive">*</span>
+                </label>
+                <AiFieldButton
+                  label="Suggest titles"
+                  disabled={!title && !content}
+                  onError={(msg) => toast(msg, "error")}
+                  onGenerate={async () => {
+                    const res = await adminPost<{ titles: string[] }>("/blog/ai/generate-titles", {
+                      topic: title || "blog post",
+                      content: content ? content.slice(0, 1000) : undefined,
+                      keywords: seoKeywords.length ? seoKeywords : undefined,
+                    });
+                    if (res.titles?.length) {
+                      setTitle(res.titles[0] ?? "");
+                      toast(`Generated ${res.titles.length} title suggestions — applied the first one`, "success");
+                    }
+                  }}
+                />
+              </div>
+              <input
+                type="text"
+                required
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder="Post title"
+                className="glass-subtle w-full rounded-xl px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary-500/30"
+              />
+            </div>
             <FormField
               label="Slug"
               value={slug}
@@ -322,10 +365,14 @@ export function PostForm({ post }: PostFormProps) {
                   )}
                 </div>
               ) : (
-                <TipTapEditor content={content} onChange={setContent} />
+                <TipTapEditor
+                  content={content}
+                  onChange={setContent}
+                  onEditorReady={(e) => { editorRef.current = e; }}
+                />
               )}
 
-              {/* Word count & reading time */}
+              {/* Word count, reading time & AI actions */}
               <div className="mt-1.5 flex items-center gap-3 text-xs text-muted-foreground">
                 <span>{wordCount.toLocaleString()} words</span>
                 <span className="h-3 w-px bg-glass-border" />
@@ -342,17 +389,53 @@ export function PostForm({ post }: PostFormProps) {
                     <span className="text-success">Auto-saved</span>
                   </>
                 )}
+                <span className="flex-1" />
+                <AiFieldButton
+                  label="AI continue writing"
+                  disabled={!content || previewMode}
+                  onError={(msg) => toast(msg, "error")}
+                  onGenerate={async () => {
+                    const res = await adminPost<{ continuation: string }>("/blog/ai/continue", {
+                      content,
+                      topic: title || undefined,
+                      keywords: seoKeywords.length ? seoKeywords : undefined,
+                    });
+                    if (res.continuation && editorRef.current) {
+                      editorRef.current.chain().focus().setTextSelection(editorRef.current.state.doc.content.size).insertContent(res.continuation).run();
+                      toast("AI continued writing", "success");
+                    }
+                  }}
+                />
               </div>
             </div>
 
-            <FormField
-              as="textarea"
-              label="Excerpt"
-              value={excerpt}
-              onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setExcerpt(e.target.value)}
-              rows={3}
-              placeholder="Brief summary..."
-            />
+            <div>
+              <div className="mb-1 flex items-center justify-between">
+                <label className="block text-sm font-medium text-foreground">Excerpt</label>
+                <AiFieldButton
+                  label="Generate excerpt"
+                  disabled={!content}
+                  onError={(msg) => toast(msg, "error")}
+                  onGenerate={async () => {
+                    const res = await adminPost<{ excerpt: string }>("/blog/ai/generate-excerpt", {
+                      content,
+                      title: title || undefined,
+                    });
+                    if (res.excerpt) {
+                      setExcerpt(res.excerpt);
+                      toast("Excerpt generated", "success");
+                    }
+                  }}
+                />
+              </div>
+              <textarea
+                value={excerpt}
+                onChange={(e) => setExcerpt(e.target.value)}
+                rows={3}
+                placeholder="Brief summary..."
+                className="glass-subtle w-full resize-none rounded-xl px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary-500/30"
+              />
+            </div>
           </div>
 
           {/* ── SEO Section ── */}
@@ -362,9 +445,27 @@ export function PostForm({ post }: PostFormProps) {
             {/* Meta Title with character count */}
             <div>
               <div className="flex items-center justify-between">
-                <label className="mb-1 block text-sm font-medium text-foreground">
-                  Meta Title
-                </label>
+                <div className="flex items-center gap-1">
+                  <label className="mb-1 block text-sm font-medium text-foreground">
+                    Meta Title
+                  </label>
+                  <AiFieldButton
+                    label="Generate meta title"
+                    disabled={!title}
+                    onError={(msg) => toast(msg, "error")}
+                    onGenerate={async () => {
+                      const res = await adminPost<{ metaTitle: string }>("/blog/ai/generate-meta-title", {
+                        title,
+                        content: content ? content.slice(0, 5000) : undefined,
+                        keywords: seoKeywords.length ? seoKeywords : undefined,
+                      });
+                      if (res.metaTitle) {
+                        setMetaTitle(res.metaTitle);
+                        toast("Meta title generated", "success");
+                      }
+                    }}
+                  />
+                </div>
                 <CharCount value={metaTitle.length} max={60} />
               </div>
               <input
@@ -379,9 +480,27 @@ export function PostForm({ post }: PostFormProps) {
             {/* Meta Description with character count */}
             <div>
               <div className="flex items-center justify-between">
-                <label className="mb-1 block text-sm font-medium text-foreground">
-                  Meta Description
-                </label>
+                <div className="flex items-center gap-1">
+                  <label className="mb-1 block text-sm font-medium text-foreground">
+                    Meta Description
+                  </label>
+                  <AiFieldButton
+                    label="Generate meta description"
+                    disabled={!title}
+                    onError={(msg) => toast(msg, "error")}
+                    onGenerate={async () => {
+                      const res = await adminPost<{ metaDescription: string }>("/blog/ai/generate-meta-description", {
+                        title,
+                        content: content ? content.slice(0, 5000) : undefined,
+                        keywords: seoKeywords.length ? seoKeywords : undefined,
+                      });
+                      if (res.metaDescription) {
+                        setMetaDescription(res.metaDescription);
+                        toast("Meta description generated", "success");
+                      }
+                    }}
+                  />
+                </div>
                 <CharCount value={metaDescription.length} max={155} />
               </div>
               <textarea
@@ -395,9 +514,26 @@ export function PostForm({ post }: PostFormProps) {
 
             {/* SEO Keywords */}
             <div>
-              <label className="mb-1 block text-sm font-medium text-foreground">
-                SEO Keywords
-              </label>
+              <div className="mb-1 flex items-center gap-1">
+                <label className="block text-sm font-medium text-foreground">
+                  SEO Keywords
+                </label>
+                <AiFieldButton
+                  label="Suggest keywords"
+                  disabled={!title && !content}
+                  onError={(msg) => toast(msg, "error")}
+                  onGenerate={async () => {
+                    const res = await adminPost<{ keywords: string[] }>("/blog/ai/suggest-keywords", {
+                      title: title || "blog post",
+                      content: content ? content.slice(0, 10000) : undefined,
+                    });
+                    if (res.keywords?.length) {
+                      setSeoKeywords(res.keywords);
+                      toast(`${res.keywords.length} keywords suggested`, "success");
+                    }
+                  }}
+                />
+              </div>
               <div className="flex gap-2">
                 <input
                   type="text"
@@ -649,6 +785,29 @@ export function PostForm({ post }: PostFormProps) {
           </button>
         </div>
       </div>
+
+      {/* AI Generate Full Post Modal */}
+      <AiGenerateModal
+        open={aiModalOpen}
+        onClose={() => setAiModalOpen(false)}
+        onGenerated={(result) => {
+          if (result.slug) {
+            setSlug(result.slug);
+            setAutoSlug(false);
+          } else if (result.title) {
+            setAutoSlug(true);
+          }
+          if (result.title) setTitle(result.title);
+          if (result.content) setContent(result.content);
+          if (result.excerpt) setExcerpt(result.excerpt);
+          if (result.metaTitle) setMetaTitle(result.metaTitle);
+          if (result.metaDescription) setMetaDescription(result.metaDescription);
+          if (result.seoKeywords?.length) setSeoKeywords(result.seoKeywords);
+          if (result.suggestedCategoryIds?.length) setCategoryIds(result.suggestedCategoryIds);
+          if (result.suggestedTagIds?.length) setTagIds(result.suggestedTagIds);
+          toast("Blog post generated with AI", "success");
+        }}
+      />
     </form>
   );
 }
