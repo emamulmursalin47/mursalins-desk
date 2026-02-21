@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { adminPost, adminPatch, adminDelete, adminUpload, revalidateCache } from "@/lib/admin-api";
 import { FormField } from "@/components/dashboard/form-field";
 import { ImageUpload } from "@/components/dashboard/image-upload";
+import { AiFieldButton } from "@/components/dashboard/ai-field-button";
+import { AiProjectModal } from "@/components/dashboard/ai-project-modal";
 import { useToast } from "@/components/dashboard/toast-context";
 import type { AdminProject } from "@/types/admin";
 
@@ -109,6 +111,7 @@ export function ProjectForm({ project }: ProjectFormProps) {
 
   const [saving, setSaving] = useState(false);
   const [autoSlug, setAutoSlug] = useState(!isEdit);
+  const [aiModalOpen, setAiModalOpen] = useState(false);
 
   useEffect(() => {
     if (autoSlug && title) setSlug(toSlug(title));
@@ -233,6 +236,28 @@ export function ProjectForm({ project }: ProjectFormProps) {
     <form onSubmit={handleSubmit} className="space-y-6">
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         <div className="space-y-5 lg:col-span-2">
+          {/* Generate with AI */}
+          <div className="glass rounded-2xl p-4 flex items-center justify-between">
+            <div>
+              <h3 className="text-sm font-semibold text-foreground">
+                AI Case Study Generator
+              </h3>
+              <p className="text-xs text-muted-foreground">
+                Generate description, challenge, approach, features, and more
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setAiModalOpen(true)}
+              className="inline-flex items-center gap-2 rounded-xl bg-primary-500 px-4 py-2 text-sm font-semibold text-white hover:bg-primary-600 transition-colors"
+            >
+              <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 3l1.912 5.813a2 2 0 0 0 1.275 1.275L21 12l-5.813 1.912a2 2 0 0 0-1.275 1.275L12 21l-1.912-5.813a2 2 0 0 0-1.275-1.275L3 12l5.813-1.912a2 2 0 0 0 1.275-1.275L12 3z" />
+              </svg>
+              Generate with AI
+            </button>
+          </div>
+
           {/* Basic Info */}
           <div className="glass rounded-2xl p-5 space-y-4">
             <FormField
@@ -253,16 +278,32 @@ export function ProjectForm({ project }: ProjectFormProps) {
               }}
               placeholder="project-slug"
             />
-            <FormField
-              as="textarea"
-              label="Description"
-              value={description}
-              onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
-                setDescription(e.target.value)
-              }
-              rows={4}
-              placeholder="Project description"
-            />
+            <div className="flex items-start gap-2">
+              <div className="flex-1">
+                <FormField
+                  as="textarea"
+                  label="Description"
+                  value={description}
+                  onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
+                    setDescription(e.target.value)
+                  }
+                  rows={4}
+                  placeholder="Project description"
+                />
+              </div>
+              <AiFieldButton
+                label="Generate description"
+                onError={(msg) => toast(msg, "error")}
+                onGenerate={async () => {
+                  const res = await adminPost<{ description: string }>(
+                    "/projects/ai/generate-description",
+                    { title, technologies, features },
+                  );
+                  if (res.description) setDescription(res.description);
+                }}
+                disabled={!title}
+              />
+            </div>
           </div>
 
           {/* Case Study Info */}
@@ -326,9 +367,29 @@ export function ProjectForm({ project }: ProjectFormProps) {
 
           {/* Challenge & Approach */}
           <div className="glass rounded-2xl p-5 space-y-4">
-            <h3 className="text-sm font-semibold text-foreground">
-              Challenge & Approach
-            </h3>
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-semibold text-foreground">
+                Challenge & Approach
+              </h3>
+              <AiFieldButton
+                label="Generate challenge & approach"
+                onError={(msg) => toast(msg, "error")}
+                onGenerate={async () => {
+                  const res = await adminPost<{
+                    challenge: string;
+                    approach: string;
+                  }>("/projects/ai/generate-challenge-approach", {
+                    title,
+                    description: description || undefined,
+                    technologies,
+                    clientIndustry: clientIndustry || undefined,
+                  });
+                  if (res.challenge) setChallenge(res.challenge);
+                  if (res.approach) setApproach(res.approach);
+                }}
+                disabled={!title}
+              />
+            </div>
             <FormField
               as="textarea"
               label="Challenge"
@@ -353,9 +414,27 @@ export function ProjectForm({ project }: ProjectFormProps) {
 
           {/* Key Features */}
           <div className="glass rounded-2xl p-5 space-y-4">
-            <h3 className="text-sm font-semibold text-foreground">
-              Key Features
-            </h3>
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-semibold text-foreground">
+                Key Features
+              </h3>
+              <AiFieldButton
+                label="Suggest features"
+                onError={(msg) => toast(msg, "error")}
+                onGenerate={async () => {
+                  const res = await adminPost<{ features: string[] }>(
+                    "/projects/ai/suggest-features",
+                    {
+                      title,
+                      description: description || undefined,
+                      technologies,
+                    },
+                  );
+                  if (res.features?.length) setFeatures(res.features);
+                }}
+                disabled={!title}
+              />
+            </div>
             <div className="flex gap-2">
               <input
                 value={featureInput}
@@ -412,9 +491,26 @@ export function ProjectForm({ project }: ProjectFormProps) {
 
           {/* Impact Metrics */}
           <div className="glass rounded-2xl p-5 space-y-4">
-            <h3 className="text-sm font-semibold text-foreground">
-              Impact Metrics
-            </h3>
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-semibold text-foreground">
+                Impact Metrics
+              </h3>
+              <AiFieldButton
+                label="Suggest metrics"
+                onError={(msg) => toast(msg, "error")}
+                onGenerate={async () => {
+                  const res = await adminPost<{
+                    metrics: { label: string; value: string }[];
+                  }>("/projects/ai/suggest-metrics", {
+                    title,
+                    description: description || undefined,
+                    features,
+                  });
+                  if (res.metrics?.length) setMetrics(res.metrics);
+                }}
+                disabled={!title}
+              />
+            </div>
             {metrics.map((m, i) => (
               <div key={i} className="flex gap-2">
                 <input
@@ -457,9 +553,26 @@ export function ProjectForm({ project }: ProjectFormProps) {
 
           {/* Challenges & Solutions */}
           <div className="glass rounded-2xl p-5 space-y-4">
-            <h3 className="text-sm font-semibold text-foreground">
-              Challenges & Solutions
-            </h3>
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-semibold text-foreground">
+                Challenges & Solutions
+              </h3>
+              <AiFieldButton
+                label="Suggest challenges"
+                onError={(msg) => toast(msg, "error")}
+                onGenerate={async () => {
+                  const res = await adminPost<{
+                    challenges: { challenge: string; solution: string }[];
+                  }>("/projects/ai/suggest-challenges", {
+                    title,
+                    description: description || undefined,
+                    technologies,
+                  });
+                  if (res.challenges?.length) setChallengesList(res.challenges);
+                }}
+                disabled={!title}
+              />
+            </div>
             {challengesList.map((c, i) => (
               <div key={i} className="glass-subtle rounded-xl p-3 space-y-2">
                 <div className="flex items-start justify-between gap-2">
@@ -552,9 +665,26 @@ export function ProjectForm({ project }: ProjectFormProps) {
 
           {/* Technologies */}
           <div className="glass rounded-2xl p-5 space-y-4">
-            <h3 className="text-sm font-semibold text-foreground">
-              Technologies
-            </h3>
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-semibold text-foreground">
+                Technologies
+              </h3>
+              <AiFieldButton
+                label="Suggest technologies"
+                onError={(msg) => toast(msg, "error")}
+                onGenerate={async () => {
+                  const res = await adminPost<{ technologies: string[] }>(
+                    "/projects/ai/suggest-technologies",
+                    {
+                      title,
+                      description: description || undefined,
+                    },
+                  );
+                  if (res.technologies?.length) setTechnologies(res.technologies);
+                }}
+                disabled={!title}
+              />
+            </div>
             <div className="flex gap-2">
               <input
                 value={techInput}
@@ -846,6 +976,24 @@ export function ProjectForm({ project }: ProjectFormProps) {
           </button>
         </div>
       </div>
+      <AiProjectModal
+        open={aiModalOpen}
+        onClose={() => setAiModalOpen(false)}
+        projectTitle={title}
+        currentTechnologies={technologies.length ? technologies : undefined}
+        clientName={clientName || undefined}
+        clientIndustry={clientIndustry || undefined}
+        onGenerated={(result) => {
+          if (result.description) setDescription(result.description);
+          if (result.tagline) setTagline(result.tagline);
+          if (result.challenge) setChallenge(result.challenge);
+          if (result.approach) setApproach(result.approach);
+          if (result.features?.length) setFeatures(result.features);
+          if (result.technologies?.length) setTechnologies(result.technologies);
+          if (result.metrics?.length) setMetrics(result.metrics);
+          if (result.challenges?.length) setChallengesList(result.challenges);
+        }}
+      />
     </form>
   );
 }
