@@ -210,9 +210,9 @@ export function ProjectDetailView({
       )}
 
       {/* ── 2. Header ── */}
-      <section className={project.featuredImage ? "py-8 sm:py-12" : "pt-24 pb-8 sm:pt-32 sm:pb-12"}>
+      <section className={project.featuredImage ? "py-6 sm:py-8" : "pt-24 pb-6 sm:pt-32 sm:pb-8"}>
         <Container>
-          <div ref={headerRef} data-gsap className="space-y-3 sm:space-y-4">
+          <div ref={headerRef} className="space-y-3 sm:space-y-4">
             {/* Badges row */}
             <div className="flex flex-wrap items-center gap-2" data-animate>
               <span
@@ -311,26 +311,26 @@ export function ProjectDetailView({
 
       {/* ── 3. Impact Metrics ── */}
       {hasMetrics && (
-        <section className="py-8 sm:py-12">
+        <section className="py-6 sm:py-10">
           <Container>
             <div
               ref={metricsRef}
-              className="grid grid-cols-2 gap-3 sm:gap-6 md:grid-cols-3 lg:grid-cols-4"
+              className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-5"
             >
               {validMetrics.map((metric, i) => (
                 <div
                   key={i}
-                  className="glass-card glass-shine rounded-xl p-4 text-center sm:rounded-2xl sm:p-6"
+                  className="glass-card glass-shine flex flex-col items-center justify-center rounded-xl p-4 text-center sm:rounded-2xl sm:p-5"
                   data-animate
                 >
-                  <div className="text-2xl font-bold text-primary-500 sm:text-3xl">
+                  <div className="text-xl font-bold tracking-tight text-primary-500 sm:text-2xl">
                     {metric.value}
                   </div>
-                  <div className="mt-1 text-xs font-medium text-foreground sm:mt-2 sm:text-sm">
+                  <div className="mt-1 text-xs font-medium text-foreground sm:mt-1.5 sm:text-sm">
                     {metric.label}
                   </div>
                   {metric.description && (
-                    <div className="mt-0.5 text-[11px] text-muted-foreground sm:mt-1 sm:text-xs">
+                    <div className="mt-0.5 text-[11px] text-muted-foreground sm:text-xs">
                       {metric.description}
                     </div>
                   )}
@@ -343,7 +343,7 @@ export function ProjectDetailView({
 
       {/* ── 4. The Challenge ── */}
       {project.challenge && (
-        <section className="py-8 sm:py-12">
+        <section className="py-6 sm:py-8">
           <Container>
             <div
               ref={challengeRef}
@@ -363,7 +363,7 @@ export function ProjectDetailView({
 
       {/* ── 5. The Approach ── */}
       {project.approach && (
-        <section className="py-8 sm:py-12">
+        <section className="py-6 sm:py-8">
           <Container>
             <div
               ref={approachRef}
@@ -383,7 +383,7 @@ export function ProjectDetailView({
 
       {/* ── 6. Key Features ── */}
       {hasFeatures && (
-        <section className="py-8 sm:py-12">
+        <section className="py-6 sm:py-8">
           <Container>
             <h2 className="mb-4 text-lg font-bold text-foreground sm:mb-6 sm:text-xl">
               Key Features
@@ -467,7 +467,7 @@ export function ProjectDetailView({
 
       {/* ── 9. Challenges & Solutions ── */}
       {hasChallenges && (
-        <section className="py-8 sm:py-12">
+        <section className="py-6 sm:py-8">
           <Container>
             <h2 className="mb-4 text-lg font-bold text-foreground sm:mb-6 sm:text-xl">
               Challenges &amp; Solutions
