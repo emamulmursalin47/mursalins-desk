@@ -149,14 +149,24 @@ export function ProjectsGrid({
     };
   }, [updatePill]);
 
+  // Animate filters once on mount
   useGSAP(() => {
     if (filtersRef.current) {
       createFadeUp(filtersRef.current, { y: 16, scrollTrigger: false });
     }
-    if (gridRef.current) {
-      createStaggerFadeUp(gridRef.current, "[data-animate]");
-    }
   });
+
+  // Re-animate grid cards when projects change (filter / pagination)
+  useGSAP(
+    () => {
+      if (gridRef.current) {
+        createStaggerFadeUp(gridRef.current, "[data-animate]", {
+          scrollTrigger: false,
+        });
+      }
+    },
+    { dependencies: [projects], scope: gridRef },
+  );
 
   return (
     <section className="relative pb-16">
