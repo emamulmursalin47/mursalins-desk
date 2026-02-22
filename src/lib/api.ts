@@ -113,11 +113,27 @@ export async function getServiceBySlug(
   }
 }
 
-export function getProjects(page = 1, limit = 6) {
-  return fetcher<PaginatedResult<Project>>(
-    `/projects?page=${page}&limit=${limit}`,
-    { revalidate: 60, tags: ["projects"] },
-  );
+export function getProjects(
+  page = 1,
+  limit = 6,
+  clientIndustry?: string,
+) {
+  const params = new URLSearchParams({
+    page: String(page),
+    limit: String(limit),
+  });
+  if (clientIndustry) params.set("clientIndustry", clientIndustry);
+  return fetcher<PaginatedResult<Project>>(`/projects?${params}`, {
+    revalidate: 60,
+    tags: ["projects"],
+  });
+}
+
+export function getProjectIndustries() {
+  return fetcher<string[]>("/projects/industries", {
+    revalidate: 60,
+    tags: ["projects"],
+  });
 }
 
 export function getProducts(page = 1, limit = 6) {

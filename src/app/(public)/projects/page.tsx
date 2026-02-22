@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { getProjects } from "@/lib/api";
+import { getProjects, getProjectIndustries } from "@/lib/api";
 import { ProjectsHero } from "@/components/projects/projects-hero";
 import { ProjectsGrid } from "@/components/projects/projects-grid";
 
@@ -10,14 +10,18 @@ export const metadata: Metadata = {
 };
 
 interface PageProps {
-  searchParams: Promise<{ page?: string }>;
+  searchParams: Promise<{ page?: string; industry?: string }>;
 }
 
 export default async function ProjectsPage({ searchParams }: PageProps) {
   const params = await searchParams;
   const currentPage = Number(params.page) || 1;
+  const industry = params.industry || undefined;
 
-  const result = await getProjects(currentPage, 12).catch(() => null);
+  const [result, industries] = await Promise.all([
+    getProjects(currentPage, 12, industry).catch(() => null),
+    getProjectIndustries().catch(() => [] as string[]),
+  ]);
 
   return (
     <>
@@ -25,6 +29,8 @@ export default async function ProjectsPage({ searchParams }: PageProps) {
       <ProjectsGrid
         projects={result?.data ?? []}
         meta={result?.meta ?? null}
+        industries={industries}
+        activeIndustry={industry ?? null}
       />
     </>
   );

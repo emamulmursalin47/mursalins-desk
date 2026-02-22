@@ -1,7 +1,8 @@
 "use client";
 
-import { useRef, useState, useMemo, useCallback, useEffect } from "react";
+import { useRef, useCallback, useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useGSAP } from "@gsap/react";
 import {
   gsap,
@@ -17,9 +18,26 @@ import { ProjectCard } from "./project-card";
 interface ProjectsGridProps {
   projects: Project[];
   meta: { page: number; totalPages: number } | null;
+  industries: string[];
+  activeIndustry: string | null;
 }
 
-export function ProjectsGrid({ projects, meta }: ProjectsGridProps) {
+/** Build /projects?... preserving industry when paginating */
+function buildHref(page: number, industry?: string | null) {
+  const params = new URLSearchParams();
+  if (page > 1) params.set("page", String(page));
+  if (industry) params.set("industry", industry);
+  const qs = params.toString();
+  return `/projects${qs ? `?${qs}` : ""}`;
+}
+
+export function ProjectsGrid({
+  projects,
+  meta,
+  industries,
+  activeIndustry,
+}: ProjectsGridProps) {
+  const router = useRouter();
   const filtersRef = useRef<HTMLDivElement>(null);
   const pillListRef = useRef<HTMLDivElement>(null);
   const pillRef = useRef<HTMLDivElement>(null);
@@ -27,25 +45,14 @@ export function ProjectsGrid({ projects, meta }: ProjectsGridProps) {
   const pillWave2Ref = useRef<HTMLSpanElement>(null);
   const isFirstPill = useRef(true);
   const gridRef = useRef<HTMLDivElement>(null);
-  const [activeCategory, setActiveCategory] = useState<string | null>(null);
 
-  const allCategories = useMemo(() => {
-    const counts = new Map<string, number>();
-    for (const p of projects) {
-      const cat = p.clientIndustry?.trim();
-      if (cat) counts.set(cat, (counts.get(cat) ?? 0) + 1);
-    }
-    return Array.from(counts.entries())
-      .sort((a, b) => b[1] - a[1])
-      .map(([name]) => name);
-  }, [projects]);
-
-  const filtered = useMemo(() => {
-    if (!activeCategory) return projects;
-    return projects.filter(
-      (p) => p.clientIndustry?.trim() === activeCategory,
-    );
-  }, [projects, activeCategory]);
+  /** Navigate to a filtered URL — resets to page 1 */
+  const selectIndustry = useCallback(
+    (industry: string | null) => {
+      router.push(buildHref(1, industry));
+    },
+    [router],
+  );
 
   // Sliding pill — measures active button and animates pill to it
   const updatePill = useCallback(() => {
@@ -123,10 +130,10 @@ export function ProjectsGrid({ projects, meta }: ProjectsGridProps) {
     }
   }, []);
 
-  // Position pill on mount and when activeTech changes
+  // Position pill on mount and when activeIndustry changes
   useEffect(() => {
     updatePill();
-  }, [activeCategory, updatePill]);
+  }, [activeIndustry, updatePill]);
 
   // Reposition pill on resize
   useEffect(() => {
@@ -155,7 +162,7 @@ export function ProjectsGrid({ projects, meta }: ProjectsGridProps) {
     <section className="relative pb-16">
       <Container>
         {/* Category filter pills — sticky below navbar */}
-        {allCategories.length > 0 && (
+        {industries.length > 0 && (
           <div
             ref={filtersRef}
             data-gsap
@@ -179,30 +186,34 @@ export function ProjectsGrid({ projects, meta }: ProjectsGridProps) {
               </div>
 
               <button
-                onClick={() => setActiveCategory(null)}
-                data-filter-active={!activeCategory ? "true" : "false"}
+                onClick={() => selectIndustry(null)}
+                data-filter-active={!activeIndustry ? "true" : "false"}
                 className={`relative rounded-full px-4 py-2 text-sm font-medium transition-colors duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/50 focus-visible:ring-offset-2 ${
-                  !activeCategory
+                  !activeIndustry
                     ? "text-primary-600"
                     : "text-muted-foreground hover:text-foreground"
                 }`}
               >
                 All Projects
               </button>
-              {allCategories.map((category) => (
+              {industries.map((industry) => (
                 <button
-                  key={category}
+                  key={industry}
                   onClick={() =>
-                    setActiveCategory(activeCategory === category ? null : category)
+                    selectIndustry(
+                      activeIndustry === industry ? null : industry,
+                    )
                   }
-                  data-filter-active={activeCategory === category ? "true" : "false"}
+                  data-filter-active={
+                    activeIndustry === industry ? "true" : "false"
+                  }
                   className={`relative rounded-full px-4 py-2 text-sm font-medium transition-colors duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/50 focus-visible:ring-offset-2 ${
-                    activeCategory === category
+                    activeIndustry === industry
                       ? "text-primary-600"
                       : "text-muted-foreground hover:text-foreground"
                   }`}
                 >
-                  {category}
+                  {industry}
                 </button>
               ))}
             </div>
@@ -214,12 +225,12 @@ export function ProjectsGrid({ projects, meta }: ProjectsGridProps) {
           ref={gridRef}
           className="mt-12 grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3"
         >
-          {filtered.map((project) => (
+          {projects.map((project) => (
             <ProjectCard key={project.id} project={project} />
           ))}
         </div>
 
-        {filtered.length === 0 && (
+        {projects.length === 0 && (
           <div className="py-20 text-center">
             <p className="text-muted-foreground">
               No projects found matching your criteria.
@@ -232,7 +243,7 @@ export function ProjectsGrid({ projects, meta }: ProjectsGridProps) {
           <div className="mt-16 flex items-center justify-center gap-3">
             {meta.page > 1 && (
               <Link
-                href={`/projects?page=${meta.page - 1}`}
+                href={buildHref(meta.page - 1, activeIndustry)}
                 className="glass glass-shine rounded-xl px-5 py-2.5 text-sm font-medium text-foreground transition-all hover:-translate-y-0.5"
               >
                 &larr; Previous
@@ -243,7 +254,7 @@ export function ProjectsGrid({ projects, meta }: ProjectsGridProps) {
             </span>
             {meta.page < meta.totalPages && (
               <Link
-                href={`/projects?page=${meta.page + 1}`}
+                href={buildHref(meta.page + 1, activeIndustry)}
                 className="glass glass-shine rounded-xl px-5 py-2.5 text-sm font-medium text-foreground transition-all hover:-translate-y-0.5"
               >
                 Next &rarr;
