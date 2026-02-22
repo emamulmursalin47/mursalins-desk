@@ -27,29 +27,25 @@ export function ProjectsGrid({ projects, meta }: ProjectsGridProps) {
   const pillWave2Ref = useRef<HTMLSpanElement>(null);
   const isFirstPill = useRef(true);
   const gridRef = useRef<HTMLDivElement>(null);
-  const [activeTech, setActiveTech] = useState<string | null>(null);
+  const [activeCategory, setActiveCategory] = useState<string | null>(null);
 
-  const allTechnologies = useMemo(() => {
+  const allCategories = useMemo(() => {
     const counts = new Map<string, number>();
     for (const p of projects) {
-      for (const t of p.technologies) {
-        counts.set(t, (counts.get(t) ?? 0) + 1);
-      }
+      const cat = p.clientIndustry?.trim();
+      if (cat) counts.set(cat, (counts.get(cat) ?? 0) + 1);
     }
     return Array.from(counts.entries())
       .sort((a, b) => b[1] - a[1])
-      .slice(0, 8)
       .map(([name]) => name);
   }, [projects]);
 
   const filtered = useMemo(() => {
-    if (!activeTech) return projects;
-    return projects.filter((p) =>
-      p.technologies.some(
-        (t) => t.toLowerCase() === activeTech.toLowerCase(),
-      ),
+    if (!activeCategory) return projects;
+    return projects.filter(
+      (p) => p.clientIndustry?.trim() === activeCategory,
     );
-  }, [projects, activeTech]);
+  }, [projects, activeCategory]);
 
   // Sliding pill — measures active button and animates pill to it
   const updatePill = useCallback(() => {
@@ -130,7 +126,7 @@ export function ProjectsGrid({ projects, meta }: ProjectsGridProps) {
   // Position pill on mount and when activeTech changes
   useEffect(() => {
     updatePill();
-  }, [activeTech, updatePill]);
+  }, [activeCategory, updatePill]);
 
   // Reposition pill on resize
   useEffect(() => {
@@ -158,8 +154,8 @@ export function ProjectsGrid({ projects, meta }: ProjectsGridProps) {
   return (
     <section className="relative pb-16">
       <Container>
-        {/* Technology filter pills — sticky below navbar */}
-        {allTechnologies.length > 0 && (
+        {/* Category filter pills — sticky below navbar */}
+        {allCategories.length > 0 && (
           <div
             ref={filtersRef}
             data-gsap
@@ -183,30 +179,30 @@ export function ProjectsGrid({ projects, meta }: ProjectsGridProps) {
               </div>
 
               <button
-                onClick={() => setActiveTech(null)}
-                data-filter-active={!activeTech ? "true" : "false"}
+                onClick={() => setActiveCategory(null)}
+                data-filter-active={!activeCategory ? "true" : "false"}
                 className={`relative rounded-full px-4 py-2 text-sm font-medium transition-colors duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/50 focus-visible:ring-offset-2 ${
-                  !activeTech
+                  !activeCategory
                     ? "text-primary-600"
                     : "text-muted-foreground hover:text-foreground"
                 }`}
               >
                 All Projects
               </button>
-              {allTechnologies.map((tech) => (
+              {allCategories.map((category) => (
                 <button
-                  key={tech}
+                  key={category}
                   onClick={() =>
-                    setActiveTech(activeTech === tech ? null : tech)
+                    setActiveCategory(activeCategory === category ? null : category)
                   }
-                  data-filter-active={activeTech === tech ? "true" : "false"}
+                  data-filter-active={activeCategory === category ? "true" : "false"}
                   className={`relative rounded-full px-4 py-2 text-sm font-medium transition-colors duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/50 focus-visible:ring-offset-2 ${
-                    activeTech === tech
+                    activeCategory === category
                       ? "text-primary-600"
                       : "text-muted-foreground hover:text-foreground"
                   }`}
                 >
-                  {tech}
+                  {category}
                 </button>
               ))}
             </div>
