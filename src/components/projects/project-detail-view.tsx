@@ -66,6 +66,32 @@ const badgeLabels: Record<string, string> = {
   performance: "High Performance",
 };
 
+/** Convert YouTube / Vimeo watch URLs → embeddable URLs */
+function toEmbedUrl(url: string): string {
+  try {
+    const u = new URL(url);
+    // youtube.com/watch?v=ID or youtube.com/shorts/ID
+    if (u.hostname.includes("youtube.com")) {
+      const id = u.searchParams.get("v") || u.pathname.split("/").pop();
+      if (u.pathname.startsWith("/embed/")) return url;
+      if (id) return `https://www.youtube.com/embed/${id}`;
+    }
+    // youtu.be/ID
+    if (u.hostname === "youtu.be") {
+      const id = u.pathname.slice(1);
+      if (id) return `https://www.youtube.com/embed/${id}`;
+    }
+    // vimeo.com/ID
+    if (u.hostname.includes("vimeo.com") && !u.pathname.includes("/video/")) {
+      const id = u.pathname.split("/").pop();
+      if (id) return `https://player.vimeo.com/video/${id}`;
+    }
+  } catch {
+    // invalid URL — return as-is
+  }
+  return url;
+}
+
 /* ─── Component ─── */
 
 interface ProjectDetailViewProps {
@@ -640,7 +666,7 @@ export function ProjectDetailView({
             <div className="glass-card glass-shine overflow-hidden rounded-xl sm:rounded-2xl">
               <div className="aspect-video">
                 <iframe
-                  src={project.videoUrl}
+                  src={toEmbedUrl(project.videoUrl)}
                   title={`${project.title} video`}
                   className="h-full w-full"
                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
